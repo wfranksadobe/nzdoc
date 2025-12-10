@@ -8,11 +8,30 @@
 
 /* header and nav layout */
 header .nav-wrapper {
-  background-color: var(--background-color);
+  background-color: #194036;
+  color: white;
   width: 100%;
   z-index: 3;
   position: fixed;
-  border-bottom: 1px solid var(--color-neutral-300);
+  padding-top: calc(15px + 0.6rem);
+}
+
+header .nav-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 15px;
+  background-color: #ffc51d;
+}
+
+header .nav-wrapper > nav > .nav-sections > .default-content-wrapper > ul > li > a,
+header .nav-wrapper > nav > .nav-sections > .default-content-wrapper > ul > li > p,
+header .nav-wrapper > nav > .nav-sections > .default-content-wrapper > ul > li > p a {
+  color: white;
+  font: var(--type-body-1-strong-font);
+  letter-spacing: var(--type-body-1-strong-letter-spacing);
 }
 
 header nav {
@@ -303,7 +322,7 @@ header nav .nav-sections ul > li:empty {
 
   header nav .nav-sections .default-content-wrapper > ul > li:hover,
   header nav .nav-sections .nav-drop[aria-expanded='true'] {
-    background-color: var(--color-neutral-200);
+    text-decoration: underline;
   }
 }
 
@@ -330,7 +349,7 @@ header nav .nav-tools {
   height: 100%;
   gap: var(--spacing-small);
   align-items: center;
-  background: var(--background-color);
+  background: #194036;
   z-index: 3;
 }
 
