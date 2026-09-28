@@ -58,7 +58,8 @@
       "text",
       "image",
       "button",
-      "title"
+      "title",
+      "content-list"
     ]
   },
   {

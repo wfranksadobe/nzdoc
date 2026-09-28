@@ -3,6 +3,8 @@
 
 // PARSER IMPORTS
 import heroParser from './parsers/hero.js';
+import cardsParser from './parsers/cards.js';
+import columnsParser from './parsers/columns.js';
 import feedbackParser from './parsers/feedback.js';
 
 // TRANSFORMER IMPORTS
@@ -11,6 +13,8 @@ import docCleanupTransformer from './transformers/doc-cleanup.js';
 // PARSER REGISTRY
 const parsers = {
   hero: heroParser,
+  cards: cardsParser,
+  columns: columnsParser,
   feedback: feedbackParser,
 };
 
@@ -21,19 +25,73 @@ const transformers = [
 
 // PAGE TEMPLATE CONFIGURATION - embedded from page-templates.json
 const PAGE_TEMPLATE = {
-  name: 'homepage',
-  description: 'DOC homepage - staged migration: hero and page feedback only',
-  urls: [
-    'https://www.doc.govt.nz/',
+  'name': 'homepage',
+  'description': 'DOC homepage - staged migration: hero, homepage panels (cards + columns, content items pending) and page feedback',
+  'urls': [
+    'https://www.doc.govt.nz/'
   ],
-  blocks: [
-    { name: 'hero', instances: ['.hero'] },
-    { name: 'feedback', instances: ['.feedbackContainer'] },
+  'blocks': [
+    {
+      'name': 'hero',
+      'instances': [
+        '.hero'
+      ]
+    },
+    {
+      'name': 'cards',
+      'instances': [
+        '.doc-homepage-layout__content_top'
+      ]
+    },
+    {
+      'name': 'columns',
+      'instances': [
+        '.doc-homepage-layout__content_bottom'
+      ]
+    },
+    {
+      'name': 'feedback',
+      'instances': [
+        '.feedbackContainer'
+      ]
+    }
   ],
-  sections: [
-    { id: 'section-1', name: 'Hero', selector: ['.hero'], blocks: ['hero'], defaultContent: [] },
-    { id: 'section-2', name: 'Feedback', selector: ['.feedbackContainer'], blocks: ['feedback'], defaultContent: [] },
-  ],
+  'sections': [
+    {
+      'id': 'section-1',
+      'name': 'Hero',
+      'selector': [
+        '.hero'
+      ],
+      'blocks': [
+        'hero'
+      ],
+      'defaultContent': []
+    },
+    {
+      'id': 'section-2',
+      'name': 'Homepage panels',
+      'selector': [
+        '.doc-homepage-layout'
+      ],
+      'blocks': [
+        'cards',
+        'columns'
+      ],
+      'defaultContent': []
+    },
+    {
+      'id': 'section-3',
+      'name': 'Feedback',
+      'selector': [
+        '.feedbackContainer'
+      ],
+      'blocks': [
+        'feedback'
+      ],
+      'defaultContent': []
+    }
+  ]
 };
 
 // all page hero images are stored in one DAM folder
@@ -135,6 +193,9 @@ export default {
     WebImporter.rules.transformBackgroundImages(main, document);
     WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
     const heroImages = mapHeroImagesToDam(main);
+    // More links for the Content Lists that are added in Universal Editor
+    const contentListMore = [...main.querySelectorAll('[data-content-list-more]')]
+      .map((el) => el.dataset.contentListMore).join('; ');
 
     // 6. path: the homepage maps to /index
     const rawPath = new URL(params.originalURL).pathname
@@ -150,6 +211,7 @@ export default {
         template: PAGE_TEMPLATE.name,
         blocks: pageBlocks.map((b) => b.name),
         heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join('; '),
+        contentListMore,
       },
     }];
   },

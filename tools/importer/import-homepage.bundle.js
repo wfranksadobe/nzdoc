@@ -55,12 +55,12 @@ var CustomImportScript = (() => {
     const links = [...element.querySelectorAll("a")];
     const cells = [];
     if (img) {
-      const picture = document.createElement("picture");
+      const picture2 = document.createElement("picture");
       const image = document.createElement("img");
       image.src = new URL(img.getAttribute("src"), SOURCE_ORIGIN).href;
       image.alt = img.getAttribute("alt") || "";
-      picture.append(image);
-      cells.push([hinted(document, "image", picture)]);
+      picture2.append(image);
+      cells.push([hinted(document, "image", picture2)]);
     } else {
       cells.push([""]);
     }
@@ -69,15 +69,15 @@ var CustomImportScript = (() => {
       const ul = document.createElement("ul");
       links.forEach((a) => {
         const li = document.createElement("li");
-        const link = document.createElement("a");
-        link.href = new URL(a.getAttribute("href"), SOURCE_ORIGIN).href;
-        link.textContent = a.textContent.trim();
+        const link2 = document.createElement("a");
+        link2.href = new URL(a.getAttribute("href"), SOURCE_ORIGIN).href;
+        link2.textContent = a.textContent.trim();
         if (/bg-doc-gold/.test(a.className)) {
           const strong = document.createElement("strong");
-          strong.append(link);
+          strong.append(link2);
           li.append(strong);
         } else {
-          li.append(link);
+          li.append(link2);
         }
         ul.append(li);
       });
@@ -89,8 +89,115 @@ var CustomImportScript = (() => {
     element.replaceWith(block);
   }
 
-  // tools/importer/parsers/feedback.js
+  // tools/importer/parsers/cards.js
+  var SOURCE_ORIGIN2 = "https://www.doc.govt.nz";
+  var DATE_PATTERN = new RegExp("^[0-9]{1,2} [A-Za-z]+ [0-9]{4}$");
+  function abs(href) {
+    return new URL(href, SOURCE_ORIGIN2).href;
+  }
   function text(el) {
+    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+  function hinted2(document, field, ...content) {
+    const frag = document.createDocumentFragment();
+    frag.appendChild(document.createComment(` field:${field} `));
+    content.forEach((c) => frag.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+    return frag;
+  }
+  function picture(document, img) {
+    const pic = document.createElement("picture");
+    const image = document.createElement("img");
+    image.src = abs(img.getAttribute("src"));
+    image.alt = img.getAttribute("alt") || "";
+    pic.append(image);
+    return pic;
+  }
+  function link(document, href, label) {
+    const a = document.createElement("a");
+    a.href = abs(href);
+    a.textContent = label || abs(href);
+    return a;
+  }
+  function paragraphs(document, container) {
+    const frag = document.createDocumentFragment();
+    [...container.querySelectorAll("p")].forEach((p) => {
+      const copy = document.createElement("p");
+      copy.textContent = text(p);
+      frag.append(copy);
+    });
+    return frag;
+  }
+  function row(document, values) {
+    return ["type", "image", "title", "date", "contentHeading", "link", "text", "more"].map((field) => values[field] ? hinted2(document, field, values[field]) : "");
+  }
+  function shortWalks(document, card) {
+    const img = card.querySelector("img");
+    const titleLink = card.querySelector("a.card_link, a");
+    return row(document, {
+      type: "short-walks",
+      image: img ? picture(document, img) : null,
+      title: text(card.querySelector("h2")),
+      link: titleLink ? link(document, titleLink.getAttribute("href"), text(card.querySelector("h2"))) : null,
+      text: paragraphs(document, card)
+    });
+  }
+  function blogDate(card) {
+    if (!card) return "";
+    const candidates = [...card.querySelectorAll("*")].flatMap((el) => [...el.childNodes]).map((node) => node.nodeType === 3 || node.nodeType === 1 ? node.textContent.replace(/\s+/g, " ").trim() : "");
+    return candidates.find((t) => DATE_PATTERN.test(t)) || "";
+  }
+  function blog(document, widget) {
+    const card = widget.querySelector(".card");
+    const img = card == null ? void 0 : card.querySelector("img");
+    const postLink = card == null ? void 0 : card.querySelector("h3 a");
+    const more = widget.querySelector(".widget__footer a");
+    return row(document, {
+      type: "blog",
+      image: img ? picture(document, img) : null,
+      title: text(widget.querySelector(".widget__title h2, h2")),
+      date: blogDate(card),
+      contentHeading: text(postLink),
+      link: postLink ? link(document, postLink.getAttribute("href"), text(postLink)) : null,
+      text: card ? paragraphs(document, card) : null,
+      more: more ? link(document, more.getAttribute("href"), "More") : null
+    });
+  }
+  function parse2(element, { document }) {
+    const cells = [];
+    [...element.children].forEach((child) => {
+      if (child.classList.contains("widget")) cells.push(blog(document, child));
+      else if (child.classList.contains("card")) cells.push(shortWalks(document, child));
+    });
+    const block = WebImporter.Blocks.createBlock(document, { name: "Cards", cells });
+    element.replaceWith(block);
+  }
+
+  // tools/importer/parsers/columns.js
+  var SOURCE_ORIGIN3 = "https://www.doc.govt.nz";
+  function text2(el) {
+    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+  function parse3(element, { document }) {
+    const moreLinks = [];
+    const columns = [...element.querySelectorAll(":scope > .widget")].map((widget) => {
+      const cell = document.createElement("div");
+      const title = widget.querySelector(".widget__title h2, h2");
+      if (title) {
+        const h2 = document.createElement("h2");
+        h2.textContent = text2(title);
+        cell.append(h2);
+      }
+      const more = widget.querySelector(".widget__footer a");
+      if (more) moreLinks.push(`${text2(title)}: ${new URL(more.getAttribute("href"), SOURCE_ORIGIN3).href}`);
+      return cell;
+    });
+    const block = WebImporter.Blocks.createBlock(document, { name: "Columns", cells: [columns] });
+    block.dataset.contentListMore = moreLinks.join("; ");
+    element.replaceWith(block);
+  }
+
+  // tools/importer/parsers/feedback.js
+  function text3(el) {
     return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
   }
   function hintedCell(document, fields) {
@@ -104,14 +211,14 @@ var CustomImportScript = (() => {
     });
     return frag;
   }
-  function parse2(element, { document }) {
-    const question = text(element.querySelector("#stepQuestion .font-bold, #stepQuestion div > div:first-child"));
-    const yes = text(element.querySelector("#btnFeedbackYes"));
-    const no = text(element.querySelector("#btnFeedbackNo"));
-    const thanks = text(element.querySelector("#stepThanks"));
-    const heading = text(element.querySelector("#stepForm h2"));
-    const label = text(element.querySelector("#stepForm label"));
-    const submit = text(element.querySelector("#stepForm button[type=submit], #stepForm button"));
+  function parse4(element, { document }) {
+    const question = text3(element.querySelector("#stepQuestion .font-bold, #stepQuestion div > div:first-child"));
+    const yes = text3(element.querySelector("#btnFeedbackYes"));
+    const no = text3(element.querySelector("#btnFeedbackNo"));
+    const thanks = text3(element.querySelector("#stepThanks"));
+    const heading = text3(element.querySelector("#stepForm h2"));
+    const label = text3(element.querySelector("#stepForm label"));
+    const submit = text3(element.querySelector("#stepForm button[type=submit], #stepForm button"));
     const cells = [
       [hintedCell(document, [["question", question]])],
       [hintedCell(document, [["answer_yes", yes], ["answer_no", no]])],
@@ -124,8 +231,12 @@ var CustomImportScript = (() => {
 
   // tools/importer/transformers/doc-cleanup.js
   var TITLE_PREFIX = "EMA: ";
+  function blockName(table) {
+    const cell = table.querySelector("th, td");
+    return cell ? cell.textContent.trim().toLowerCase().replace(/\s+/g, "-") : "";
+  }
   function transform(hookName, element, payload) {
-    const { document } = payload;
+    const { document, template } = payload;
     if (hookName === "beforeTransform") {
       const title = document.querySelector("title");
       if (title && !title.textContent.startsWith(TITLE_PREFIX)) {
@@ -134,10 +245,18 @@ var CustomImportScript = (() => {
       return;
     }
     if (hookName === "afterTransform") {
-      const blocks = [...element.querySelectorAll("table")];
+      const blocks = [...element.querySelectorAll("table")].filter((table) => !table.parentElement.closest("table"));
+      const sectionOf = (table) => {
+        const name = blockName(table);
+        const index = ((template == null ? void 0 : template.sections) || []).findIndex((s) => s.blocks.includes(name));
+        return index === -1 ? name : index;
+      };
       const kept = [];
-      blocks.forEach((table, i) => {
-        if (i > 0) kept.push(document.createElement("hr"));
+      let current;
+      blocks.forEach((table) => {
+        const section = sectionOf(table);
+        if (kept.length && section !== current) kept.push(document.createElement("hr"));
+        current = section;
         kept.push(table);
       });
       element.replaceChildren(...kept);
@@ -147,24 +266,80 @@ var CustomImportScript = (() => {
   // tools/importer/import-homepage.js
   var parsers = {
     hero: parse,
-    feedback: parse2
+    cards: parse2,
+    columns: parse3,
+    feedback: parse4
   };
   var transformers = [
     transform
   ];
   var PAGE_TEMPLATE = {
-    name: "homepage",
-    description: "DOC homepage - staged migration: hero and page feedback only",
-    urls: [
+    "name": "homepage",
+    "description": "DOC homepage - staged migration: hero, homepage panels (cards + columns, content items pending) and page feedback",
+    "urls": [
       "https://www.doc.govt.nz/"
     ],
-    blocks: [
-      { name: "hero", instances: [".hero"] },
-      { name: "feedback", instances: [".feedbackContainer"] }
+    "blocks": [
+      {
+        "name": "hero",
+        "instances": [
+          ".hero"
+        ]
+      },
+      {
+        "name": "cards",
+        "instances": [
+          ".doc-homepage-layout__content_top"
+        ]
+      },
+      {
+        "name": "columns",
+        "instances": [
+          ".doc-homepage-layout__content_bottom"
+        ]
+      },
+      {
+        "name": "feedback",
+        "instances": [
+          ".feedbackContainer"
+        ]
+      }
     ],
-    sections: [
-      { id: "section-1", name: "Hero", selector: [".hero"], blocks: ["hero"], defaultContent: [] },
-      { id: "section-2", name: "Feedback", selector: [".feedbackContainer"], blocks: ["feedback"], defaultContent: [] }
+    "sections": [
+      {
+        "id": "section-1",
+        "name": "Hero",
+        "selector": [
+          ".hero"
+        ],
+        "blocks": [
+          "hero"
+        ],
+        "defaultContent": []
+      },
+      {
+        "id": "section-2",
+        "name": "Homepage panels",
+        "selector": [
+          ".doc-homepage-layout"
+        ],
+        "blocks": [
+          "cards",
+          "columns"
+        ],
+        "defaultContent": []
+      },
+      {
+        "id": "section-3",
+        "name": "Feedback",
+        "selector": [
+          ".feedbackContainer"
+        ],
+        "blocks": [
+          "feedback"
+        ],
+        "defaultContent": []
+      }
     ]
   };
   var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
@@ -235,6 +410,7 @@ var CustomImportScript = (() => {
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const heroImages = mapHeroImagesToDam(main);
+      const contentListMore = [...main.querySelectorAll("[data-content-list-more]")].map((el) => el.dataset.contentListMore).join("; ");
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
       return [{
@@ -244,7 +420,8 @@ var CustomImportScript = (() => {
           title: document.title,
           template: PAGE_TEMPLATE.name,
           blocks: pageBlocks.map((b) => b.name),
-          heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; ")
+          heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; "),
+          contentListMore
         }
       }];
     }

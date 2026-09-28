@@ -24,7 +24,8 @@
             "resourceType": "core/franklin/components/block/v1/block/item",
             "template": {
               "name": "Card",
-              "model": "card"
+              "model": "card",
+              "type": "short-walks"
             }
           }
         }
@@ -35,6 +36,23 @@
     {
       "id": "card",
       "fields": [
+        {
+          "component": "select",
+          "valueType": "string",
+          "name": "type",
+          "label": "Type",
+          "value": "short-walks",
+          "options": [
+            {
+              "name": "Short Walks (large image, title, text)",
+              "value": "short-walks"
+            },
+            {
+              "name": "Blog (card title, date, content title, image and text, More link)",
+              "value": "blog"
+            }
+          ]
+        },
         {
           "component": "reference",
           "valueType": "string",
@@ -47,13 +65,50 @@
           "valueType": "string",
           "name": "imageAlt",
           "label": "Alt"
-        },        
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "title",
+          "label": "Title",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "date",
+          "label": "Date",
+          "description": "Blog only",
+          "value": ""
+        },
+        {
+          "component": "text",
+          "valueType": "string",
+          "name": "contentHeading",
+          "label": "Content title",
+          "description": "Blog only",
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "valueType": "string",
+          "name": "link",
+          "label": "Link",
+          "description": "Where the card links to (the title on Short Walks cards, the content title on Blog cards)"
+        },
         {
           "component": "richtext",
+          "valueType": "string",
           "name": "text",
-          "value": "",
           "label": "Text",
-          "valueType": "string"
+          "value": ""
+        },
+        {
+          "component": "aem-content",
+          "valueType": "string",
+          "name": "more",
+          "label": "More",
+          "description": "Optional. Shows a More button when set (Blog cards)"
         }
       ]
     }

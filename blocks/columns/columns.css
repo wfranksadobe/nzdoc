@@ -31,3 +31,37 @@
     order: unset;
   }
 }
+
+/* titled panel columns (a column holding a content list) */
+.columns .columns-panel-col {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  color: rgb(56 66 70);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.columns .columns-panel-col > h2,
+.columns .columns-panel-col > .default-content-wrapper > h2 {
+  margin: 0;
+  padding: 8px 16px;
+  background-color: rgb(56 66 70);
+  color: #fff;
+  font-family: 'Zilla Slab', 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 48px;
+}
+
+.columns > .columns-panel-row {
+  gap: 20px;
+}
+
+@media (width >= 900px) {
+  .columns > .columns-panel-row {
+    align-items: stretch;
+    gap: 20px;
+  }
+}

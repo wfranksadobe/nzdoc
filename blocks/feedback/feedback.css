@@ -1,11 +1,3 @@
-@font-face {
-  font-family: 'Zilla Slab';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url('../../fonts/zilla-slab-medium.woff2') format('woff2');
-}
-
 /* white box on the page background, 32px clear of the footer */
 main .section.feedback-container {
   margin-bottom: 0;

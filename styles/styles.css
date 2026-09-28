@@ -242,8 +242,9 @@ main > .section {
   margin: 40px 0;
 }
 
+/* content column matches the source: 961px wide inside the gutters */
 main > .section > div {
-  max-width: 1200px;
+  max-width: 961px;
   margin: auto;
   padding: 0 24px;
 }

@@ -4,13 +4,19 @@
 /**
  * DOC page transformer (staged migration).
  * beforeTransform: prefix the page title with "EMA: ".
- * afterTransform: keep only the parsed blocks, one section each, and drop
- * everything else from the page (the rest of the page is migrated later).
+ * afterTransform: keep only the parsed (top-level) blocks, grouped into the
+ * template's sections, and drop everything else from the page (the rest of
+ * the page is migrated later).
  */
 const TITLE_PREFIX = 'EMA: ';
 
+function blockName(table) {
+  const cell = table.querySelector('th, td');
+  return cell ? cell.textContent.trim().toLowerCase().replace(/\s+/g, '-') : '';
+}
+
 export default function transform(hookName, element, payload) {
-  const { document } = payload;
+  const { document, template } = payload;
 
   if (hookName === 'beforeTransform') {
     const title = document.querySelector('title');
@@ -21,10 +27,20 @@ export default function transform(hookName, element, payload) {
   }
 
   if (hookName === 'afterTransform') {
-    const blocks = [...element.querySelectorAll('table')];
+    // nested blocks (e.g. a content list inside columns) stay inside their parent
+    const blocks = [...element.querySelectorAll('table')]
+      .filter((table) => !table.parentElement.closest('table'));
+    const sectionOf = (table) => {
+      const name = blockName(table);
+      const index = (template?.sections || []).findIndex((s) => s.blocks.includes(name));
+      return index === -1 ? name : index;
+    };
     const kept = [];
-    blocks.forEach((table, i) => {
-      if (i > 0) kept.push(document.createElement('hr'));
+    let current;
+    blocks.forEach((table) => {
+      const section = sectionOf(table);
+      if (kept.length && section !== current) kept.push(document.createElement('hr'));
+      current = section;
       kept.push(table);
     });
     element.replaceChildren(...kept);

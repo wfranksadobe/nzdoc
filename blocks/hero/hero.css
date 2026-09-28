@@ -1,9 +1,9 @@
-@font-face {
-  font-family: 'Zilla Slab';
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  src: url('../../fonts/zilla-slab-regular.woff2') format('woff2');
+main > .section.hero-container {
+  margin-bottom: 24px;
+}
+
+main > .section.hero-container + .section {
+  margin-top: 24px;
 }
 
 /* hero spans the same content width as the header: logo edge to search button edge */

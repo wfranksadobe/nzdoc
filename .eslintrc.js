@@ -18,5 +18,8 @@ module.exports = {
     'import/extensions': ['error', { js: 'always' }], // require js file extensions in imports
     'linebreak-style': ['error', 'unix'], // enforce unix linebreaks
     'no-param-reassign': [2, { props: false }], // allow modifying properties of param
+    // card: one cell per property by project decision
+    // (type, image, title, date, content title, link, text, more)
+    'xwalk/max-cells': ['error', { '*': 4, card: 8 }],
   },
 };
