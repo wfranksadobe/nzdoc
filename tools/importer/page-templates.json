@@ -1,0 +1,37 @@
+{
+  "templates": [
+    {
+      "name": "homepage",
+      "description": "DOC homepage - staged migration: hero and page feedback only",
+      "urls": [
+        "https://www.doc.govt.nz/"
+      ],
+      "blocks": [
+        {
+          "name": "hero",
+          "instances": [".hero"]
+        },
+        {
+          "name": "feedback",
+          "instances": [".feedbackContainer"]
+        }
+      ],
+      "sections": [
+        {
+          "id": "section-1",
+          "name": "Hero",
+          "selector": [".hero"],
+          "blocks": ["hero"],
+          "defaultContent": []
+        },
+        {
+          "id": "section-2",
+          "name": "Feedback",
+          "selector": [".feedbackContainer"],
+          "blocks": ["feedback"],
+          "defaultContent": []
+        }
+      ]
+    }
+  ]
+}

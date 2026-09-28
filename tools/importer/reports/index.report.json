@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "url": "https://www.doc.govt.nz/",
+  "path": "index",
+  "timestamp": "2026-09-28T02:02:52.120Z",
+  "title": "EMA: Department of Conservation",
+  "template": "homepage",
+  "blocks": [
+    "hero",
+    "feedback"
+  ]
+}

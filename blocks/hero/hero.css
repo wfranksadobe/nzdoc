@@ -1,37 +1,121 @@
-.hero-container .hero-wrapper {
-  max-width: unset;
-  padding: 0;
+@font-face {
+  font-family: 'Zilla Slab';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../../fonts/zilla-slab-regular.woff2') format('woff2');
+}
+
+/* hero spans the same content width as the header: logo edge to search button edge */
+main > .section.hero-container > .hero-wrapper {
+  box-sizing: border-box;
+  max-width: calc(1066px + 64px);
+  padding: 0 32px;
 }
 
 .hero {
+  --hero-text: rgb(56 66 70);
+  --hero-gold: rgb(255 197 29);
+
   position: relative;
-  padding: 40px 24px;
-  min-height: 300px;
+  overflow: hidden;
+  color: var(--hero-text);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
 }
 
-.hero h1 {
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-  color: var(--background-color);
+.hero-media,
+.hero-media picture {
+  display: block;
 }
 
-.hero picture {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  object-fit: cover;
-  box-sizing: border-box;
-}
-
-.hero img {
-  object-fit: cover;
+.hero-media img {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: 400px;
+  max-width: 100%;
+  object-fit: cover;
+}
+
+.hero-content {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.hero-content-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 961px;
+}
+
+.hero-title {
+  box-sizing: border-box;
+  max-width: max-content;
+  background-color: #fff;
+  opacity: 0.85;
+  padding: 12px 24px 16px;
+}
+
+.hero-title h1 {
+  margin: 0;
+  color: var(--hero-text);
+  font-family: 'Zilla Slab', 'Courier New', monospace;
+  font-size: 45px;
+  font-weight: 400;
+  line-height: 67.5px;
+}
+
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  margin: 12px 0 0;
+  padding: 0 0 48px;
+  list-style: none;
+}
+
+.hero-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--hero-text);
+  padding: 8px 12px;
+  background-color: rgb(255 255 255 / 80%);
+  color: var(--hero-text);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 16px;
+}
+
+.hero a.hero-link:any-link {
+  color: var(--hero-text);
+  text-decoration: none;
+}
+
+.hero a.hero-link:hover {
+  background-color: rgb(255 255 255 / 90%);
+}
+
+.hero .hero-link-highlight .hero-link {
+  background-color: rgb(255 197 29 / 90%);
+  font-weight: 500;
+}
+
+.hero .hero-link-highlight a.hero-link:hover {
+  background-color: var(--hero-gold);
 }
 
 @media (width >= 900px) {
-  .hero {
-    padding: 40px 32px;
+  .hero-media img {
+    height: 600px;
+  }
+
+  .hero-content {
+    padding: 0 32px;
   }
 }
