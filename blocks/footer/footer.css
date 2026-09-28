@@ -1,20 +1,173 @@
 footer {
-  background-color: var(--light-color);
-  font-size: var(--body-font-size-xs);
+  --footer-green: rgb(25 64 54);
+  --footer-green-light: rgb(71 102 94);
+  --footer-text: rgb(56 66 70);
+
+  color: var(--footer-text);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
 }
 
-footer .footer > div {
-  margin: auto;
-  max-width: 1200px;
-  padding: 40px 24px 24px;
-}
-
-footer .footer p {
+footer ul {
   margin: 0;
+  list-style: none;
+  padding: 0;
+}
+
+footer a:any-link {
+  color: #fff;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* main band */
+footer .footer-main {
+  background-color: var(--footer-green);
+  padding: 32px 20px 20px;
+}
+
+footer .footer-main-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 961px;
+  margin: 0 auto;
+}
+
+footer .footer-channels ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 8px;
+}
+
+footer .footer-channels li {
+  display: flex;
+  gap: 8px;
+}
+
+footer .footer-channels li + li::before {
+  content: '';
+  align-self: center;
+  width: 1px;
+  height: 24px;
+  margin: 0 10px;
+  background-color: var(--footer-green-light);
+}
+
+footer .footer-channels a {
+  display: block;
+  padding: 4px 0;
+}
+
+footer .footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 0;
+  margin-top: 20px;
+  border-top: 1px solid var(--footer-green-light);
+  padding-top: 20px;
+}
+
+/* government logo is code-driven: repo asset, explicit size */
+footer .footer-govt-logo {
+  display: block;
+  flex: 0 0 206px;
+  width: 206px;
+  height: 48px;
+  margin: 0 24px 6px 0;
+  background: url('../../icons/nz-government-logo-white.svg') left center / contain no-repeat;
+}
+
+footer a.footer-govt-logo:hover {
+  text-decoration: none;
+}
+
+footer .footer-link-groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+footer .footer-link-groups ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 20px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+footer .footer-link-groups a {
+  display: block;
+}
+
+footer .footer-divider {
+  display: block;
+  width: 1px;
+  height: 24px;
+  margin: 0 10px;
+  background-color: var(--footer-green-light);
+}
+
+/* back to top */
+footer .footer-back-to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10;
+  box-sizing: border-box;
+  width: 50px;
+  height: 50px;
+  margin: 0;
+  border: 1px solid #fff;
+  border-radius: 0;
+  padding: 12px;
+  background-color: var(--footer-green);
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  cursor: pointer;
+  transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+footer .footer-back-to-top.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+footer .footer-back-to-top svg {
+  display: block;
+  width: 24px;
+  height: 24px;
 }
 
 @media (width >= 900px) {
-  footer .footer > div {
-    padding: 40px 32px 24px;
+  footer .footer-main {
+    padding: 40px 0;
+  }
+
+  footer .footer-channels {
+    display: flex;
+    justify-content: center;
+
+    /* source row sits 16px right of true centre */
+    padding: 0 40px 0 72px;
+  }
+
+  footer .footer-channels ul {
+    justify-content: center;
+    align-items: center;
+    gap: 20px 8px;
+  }
+
+  footer .footer-bottom {
+    flex-wrap: nowrap;
+    margin: 20px 24px 0;
   }
 }

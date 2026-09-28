@@ -1,0 +1,147 @@
+@font-face {
+  font-family: 'Zilla Slab';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../../fonts/zilla-slab-medium.woff2') format('woff2');
+}
+
+/* the source shows the white feedback box on its light page background */
+main .section.feedback-container {
+  background-color: rgb(245 244 242);
+}
+
+.feedback {
+  --feedback-green: rgb(25 64 54);
+  --feedback-green-light: rgb(71 102 94);
+  --feedback-text: rgb(56 66 70);
+
+  max-width: 961px;
+  margin: 32px auto;
+  background-color: #fff;
+  color: var(--feedback-text);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.feedback > [hidden] {
+  display: none;
+}
+
+.feedback p {
+  margin: 0;
+}
+
+.feedback-question-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 24px;
+}
+
+.feedback .feedback-question {
+  margin-bottom: 16px;
+  font-weight: 700;
+}
+
+.feedback-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.feedback-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 10px 12px;
+  background-color: var(--feedback-green);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  line-height: 21px;
+  cursor: pointer;
+}
+
+.feedback .feedback-thanks {
+  margin: 24px;
+  color: var(--feedback-green);
+  font-weight: 700;
+}
+
+.feedback-form {
+  flex: 1 1 100%;
+  padding: 0 0 8px 16px;
+}
+
+.feedback-form h2 {
+  margin: 24px 0 16px;
+  color: var(--feedback-text);
+  font-family: 'Zilla Slab', 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 57px;
+}
+
+.feedback-form label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.feedback-form textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 123px;
+  margin: 0 0 34px;
+  border: 1px solid var(--feedback-text);
+  border-radius: 0;
+  padding: 7px 12px;
+  color: var(--feedback-text);
+  font: inherit;
+}
+
+.feedback-form button {
+  margin: 0 0 24px;
+  border: 1px solid var(--feedback-green);
+  border-radius: 0;
+  padding: 8px 12px;
+  background-color: var(--feedback-green);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feedback-actions button:hover {
+  background-color: var(--feedback-green-light);
+}
+
+@media (width >= 900px) {
+  .feedback {
+    display: flex;
+    align-items: center;
+  }
+
+  .feedback-question-step {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .feedback .feedback-question {
+    margin: 0 16px 0 0;
+  }
+
+  .feedback-form label {
+    width: 50%;
+  }
+
+  .feedback-form textarea {
+    width: 45%;
+  }
+}

@@ -256,6 +256,61 @@
     ]
   },
   {
+    "id": "feedback",
+    "fields": [
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "question",
+        "label": "Question",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "answer_yes",
+        "label": "Positive answer label",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "answer_no",
+        "label": "Negative answer label",
+        "value": "",
+        "description": "Opens the follow-up form"
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "thanksMessage",
+        "label": "Thank-you message",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "form_heading",
+        "label": "Follow-up form heading",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "form_label",
+        "label": "Comment field label",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "form_submit",
+        "label": "Submit button label",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "form",
     "fields": [
       {

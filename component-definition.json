@@ -205,6 +205,28 @@
           }
         },
         {
+          "title": "Feedback",
+          "id": "feedback",
+          "plugins": {
+            "xwalk": {
+              "page": {
+                "resourceType": "core/franklin/components/block/v1/block",
+                "template": {
+                  "name": "Feedback",
+                  "model": "feedback",
+                  "question": "Was this information helpful?",
+                  "answer_yes": "Yes",
+                  "answer_no": "No",
+                  "thanksMessage": "Great - thanks for your feedback.",
+                  "form_heading": "Page-level feedback",
+                  "form_label": "Sorry about that. How can we improve the information?",
+                  "form_submit": "Submit"
+                }
+              }
+            }
+          }
+        },
+        {
           "title": "Form",
           "id": "form",
           "plugins": {
