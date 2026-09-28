@@ -344,16 +344,32 @@ var CustomImportScript = (() => {
     ]
   };
   var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
-  function mapHeroImagesToDam(main) {
+  var BLOG_DAM_FOLDER = "/content/dam/nzdoc/blogs";
+  var BLOG_UPLOAD_PATTERN = /\/wp-content\/uploads\/(\d{4})\//;
+  function fileName(src) {
+    return new URL(src).pathname.split("/").pop();
+  }
+  function firstCellText(el) {
+    const cell = el.querySelector("th, td");
+    return cell ? cell.textContent.trim() : "";
+  }
+  function mapImagesToDam(main) {
     const mapped = /* @__PURE__ */ new Map();
+    const toHeros = (img) => {
+      const src = img.getAttribute("src");
+      mapped.set(src, `${HERO_DAM_FOLDER}/${fileName(src)}`);
+    };
     main.querySelectorAll("table").forEach((table) => {
-      const name = table.querySelector("th, td");
-      if (!name || !/^hero\b/i.test(name.textContent.trim())) return;
-      table.querySelectorAll("img").forEach((img) => {
-        const source = img.getAttribute("src");
-        const file = new URL(source).pathname.split("/").pop();
-        mapped.set(source, `${HERO_DAM_FOLDER}/${file}`);
-      });
+      const name = firstCellText(table);
+      if (/^hero\b/i.test(name)) table.querySelectorAll("img").forEach(toHeros);
+      if (/^cards\b/i.test(name)) {
+        [...table.querySelectorAll("tr")].slice(1).filter((row2) => firstCellText(row2) === "short-walks").forEach((row2) => row2.querySelectorAll("img").forEach(toHeros));
+      }
+    });
+    main.querySelectorAll("img").forEach((img) => {
+      const src = img.getAttribute("src");
+      const blog2 = new URL(src).pathname.match(BLOG_UPLOAD_PATTERN);
+      if (!mapped.has(src) && blog2) mapped.set(src, `${BLOG_DAM_FOLDER}/${blog2[1]}/${fileName(src)}`);
     });
     main.querySelectorAll("img").forEach((img) => {
       const dam = mapped.get(img.getAttribute("src"));
@@ -410,7 +426,7 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document);
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-      const heroImages = mapHeroImagesToDam(main);
+      const damImages = mapImagesToDam(main);
       const contentListMore = [...main.querySelectorAll("[data-content-list-more]")].map((el) => el.dataset.contentListMore).join("; ");
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
@@ -421,7 +437,7 @@ var CustomImportScript = (() => {
           title: document.title,
           template: PAGE_TEMPLATE.name,
           blocks: pageBlocks.map((b) => b.name),
-          heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; "),
+          damImages: damImages.map((i) => `${i.source} -> ${i.dam}`).join("; "),
           contentListMore
         }
       }];

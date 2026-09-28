@@ -94,25 +94,48 @@ const PAGE_TEMPLATE = {
   ]
 };
 
-// all page hero images are stored in one DAM folder
+// DAM folders for migrated images
 const HERO_DAM_FOLDER = '/content/dam/nzdoc/heros';
+const BLOG_DAM_FOLDER = '/content/dam/nzdoc/blogs';
+// DOC blog uploads: /wp-content/uploads/<year>/<month>/<file>
+const BLOG_UPLOAD_PATTERN = /\/wp-content\/uploads\/(\d{4})\//;
+
+function fileName(src) {
+  return new URL(src).pathname.split('/').pop();
+}
+
+function firstCellText(el) {
+  const cell = el.querySelector('th, td');
+  return cell ? cell.textContent.trim() : '';
+}
 
 /**
- * Points every hero image (and any other use of the same image, e.g. the
- * metadata image) at the shared hero DAM folder, keeping the file name.
+ * Points migrated images at their DAM folders, keeping the file name:
+ *  - hero images and Short Walks card images -> heros
+ *  - DOC blog images -> blogs/<year of upload>
+ * Every other use of the same image (e.g. the metadata image) follows.
  * @param {Element} main - the transformed page
  * @returns {Array} { source, dam } pairs for the images that were mapped
  */
-function mapHeroImagesToDam(main) {
+function mapImagesToDam(main) {
   const mapped = new Map();
+  const toHeros = (img) => {
+    const src = img.getAttribute('src');
+    mapped.set(src, `${HERO_DAM_FOLDER}/${fileName(src)}`);
+  };
   main.querySelectorAll('table').forEach((table) => {
-    const name = table.querySelector('th, td');
-    if (!name || !/^hero\b/i.test(name.textContent.trim())) return;
-    table.querySelectorAll('img').forEach((img) => {
-      const source = img.getAttribute('src');
-      const file = new URL(source).pathname.split('/').pop();
-      mapped.set(source, `${HERO_DAM_FOLDER}/${file}`);
-    });
+    const name = firstCellText(table);
+    if (/^hero\b/i.test(name)) table.querySelectorAll('img').forEach(toHeros);
+    if (/^cards\b/i.test(name)) {
+      [...table.querySelectorAll('tr')].slice(1)
+        .filter((row) => firstCellText(row) === 'short-walks')
+        .forEach((row) => row.querySelectorAll('img').forEach(toHeros));
+    }
+  });
+  main.querySelectorAll('img').forEach((img) => {
+    const src = img.getAttribute('src');
+    const blog = new URL(src).pathname.match(BLOG_UPLOAD_PATTERN);
+    if (!mapped.has(src) && blog) mapped.set(src, `${BLOG_DAM_FOLDER}/${blog[1]}/${fileName(src)}`);
   });
   main.querySelectorAll('img').forEach((img) => {
     const dam = mapped.get(img.getAttribute('src'));
@@ -192,7 +215,7 @@ export default {
     WebImporter.rules.createMetadata(main, document);
     WebImporter.rules.transformBackgroundImages(main, document);
     WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
-    const heroImages = mapHeroImagesToDam(main);
+    const damImages = mapImagesToDam(main);
     // More links for the Content Lists that are added in Universal Editor
     const contentListMore = [...main.querySelectorAll('[data-content-list-more]')]
       .map((el) => el.dataset.contentListMore).join('; ');
@@ -210,7 +233,7 @@ export default {
         title: document.title,
         template: PAGE_TEMPLATE.name,
         blocks: pageBlocks.map((b) => b.name),
-        heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join('; '),
+        damImages: damImages.map((i) => `${i.source} -> ${i.dam}`).join('; '),
         contentListMore,
       },
     }];
