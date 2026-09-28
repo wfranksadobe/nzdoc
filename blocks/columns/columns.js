@@ -1,15 +1,34 @@
 import { decorateBlock, loadBlock } from '../../scripts/aem.js';
 
 /**
- * Blocks authored inside a column (e.g. Content List) are not picked up by the
- * page's block decoration, which only looks at section level, so decorate and
- * load them here.
+ * Content lists written right after the Columns block (as imported, since
+ * nested blocks can't be carried through the import) belong to the columns in
+ * order: move the Nth list into the Nth column that doesn't already hold one.
+ * @param {Element} block the columns block
+ * @param {Element[]} cols first-row columns
+ */
+function adoptFollowingContentLists(block, cols) {
+  const targets = cols.filter((col) => !col.querySelector(':scope > .content-list'));
+  let next = block.parentElement?.nextElementSibling;
+  while (targets.length && next?.classList.contains('content-list-wrapper')) {
+    const wrapper = next;
+    next = next.nextElementSibling;
+    const list = wrapper.querySelector(':scope > .content-list');
+    if (list) targets.shift().append(list);
+    wrapper.remove();
+  }
+}
+
+/**
+ * Blocks inside a column (e.g. Content List) are not loaded by the page's block
+ * loading, which only looks at section level, so decorate and load them here.
  * @param {Element} col column cell
  * @returns {Promise[]} loading nested blocks
  */
 function loadNestedBlocks(col) {
   return [...col.querySelectorAll(':scope > div[class]')]
-    .filter((el) => !el.dataset.blockStatus && el.firstElementChild?.tagName === 'DIV')
+    .filter((el) => el.firstElementChild?.tagName === 'DIV'
+      && !['loading', 'loaded'].includes(el.dataset.blockStatus))
     .map((nested) => {
       decorateBlock(nested);
       return loadBlock(nested);
@@ -19,6 +38,7 @@ function loadNestedBlocks(col) {
 export default async function decorate(block) {
   const cols = [...block.firstElementChild.children];
   block.classList.add(`columns-${cols.length}-cols`);
+  adoptFollowingContentLists(block, cols);
 
   const loading = [];
   [...block.children].forEach((row) => {

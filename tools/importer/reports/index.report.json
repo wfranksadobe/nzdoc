@@ -2,7 +2,7 @@
   "status": "success",
   "url": "https://www.doc.govt.nz/",
   "path": "index",
-  "timestamp": "2026-09-28T03:19:20.863Z",
+  "timestamp": "2026-09-28T03:31:15.762Z",
   "title": "EMA: Department of Conservation",
   "template": "homepage",
   "blocks": [
@@ -11,6 +11,5 @@
     "columns",
     "feedback"
   ],
-  "damImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/9b48a55da5974906b6d65a89fb9d5d06/kura-tawhiti-hero.jpg -> /content/dam/nzdoc/heros/kura-tawhiti-hero.jpg; https://www.doc.govt.nz/thumbs/gallery/contentassets/a8cf8502518043808b916575ca1bb512/denniston-hero.jpg -> /content/dam/nzdoc/heros/denniston-hero.jpg; https://i0.wp.com/blog.doc.govt.nz/wp-content/uploads/2026/09/black-robin-invertebrate-leon-everett-1-e1788825954346.jpg?w=200 -> /content/dam/nzdoc/blogs/2026/black-robin-invertebrate-leon-everett-1-e1788825954346.jpg",
-  "contentListMore": "Featured: https://www.doc.govt.nz/footer-links/new-on-the-site/; Media releases: https://www.doc.govt.nz/news/media-releases/2026-media-releases/"
+  "damImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/9b48a55da5974906b6d65a89fb9d5d06/kura-tawhiti-hero.jpg -> /content/dam/nzdoc/heros/kura-tawhiti-hero.jpg; https://www.doc.govt.nz/thumbs/gallery/contentassets/a8cf8502518043808b916575ca1bb512/denniston-hero.jpg -> /content/dam/nzdoc/heros/denniston-hero.jpg; https://i0.wp.com/blog.doc.govt.nz/wp-content/uploads/2026/09/black-robin-invertebrate-leon-everett-1-e1788825954346.jpg?w=200 -> /content/dam/nzdoc/blogs/2026/black-robin-invertebrate-leon-everett-1-e1788825954346.jpg"
 }

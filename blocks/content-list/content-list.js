@@ -1,41 +1,86 @@
 import { createOptimizedPicture } from '../../scripts/aem.js';
 import { moveInstrumentation } from '../../scripts/scripts.js';
 
+// AEM site root: page references may use the repository path
+const SITE_ROOT = '/content/nzdoc';
+
 function hrefOf(el) {
   if (!el) return '';
   const a = el.tagName === 'A' ? el : el.querySelector('a');
-  return a ? a.href : el.textContent.trim();
+  return a ? a.getAttribute('href') : el.textContent.trim();
 }
 
 /**
- * Reads title, description and image of a referenced page from its HTML head.
- * @param {string} href page URL
- * @returns {Promise<Object|null>} page summary, or null when unavailable
+ * Paths to try for a referenced page: as authored, then the published path
+ * (repository root stripped) and the local preview path (/content/...).
+ * @param {string} href page reference
+ * @returns {string[]} same-origin candidate paths
  */
-async function fetchPageSummary(href) {
-  try {
-    const url = new URL(href, window.location.href);
-    if (url.origin !== window.location.origin) return null;
-    const resp = await fetch(url.pathname);
-    if (!resp.ok) return null;
-    const doc = new DOMParser().parseFromString(await resp.text(), 'text/html');
-    // metadata names can differ in case between environments; an explicitly
-    // authored value (e.g. og:title) is written after the derived one, so use the last
-    const meta = (name) => [...doc.querySelectorAll(`meta[property="${name}" i], meta[name="${name}" i]`)]
-      .pop()?.content || '';
-    return {
-      title: meta('og:title') || doc.title,
-      description: meta('description') || meta('og:description'),
-      image: meta('og:image'),
-      imageAlt: meta('og:image:alt'),
-    };
-  } catch (e) {
-    return null;
-  }
+function candidatePaths(href) {
+  const url = new URL(href, window.location.href);
+  if (url.origin !== window.location.origin) return [];
+  const path = url.pathname.replace(/\.html$/, '');
+  if (!path.startsWith(`${SITE_ROOT}/`)) return [path];
+  const rest = path.slice(SITE_ROOT.length);
+  return [...new Set([rest, `/content${rest}`, path])];
 }
 
 /**
- * Builds one content item: linked title plus the page's image and description.
+ * Reads the teaser for a referenced page: image and title from the page's
+ * hero block, subtitle from the page metadata.
+ * @param {string} href page reference
+ * @returns {Promise<Object|null>} teaser, or null when the page can't be read
+ */
+async function fetchTeaser(href) {
+  // eslint-disable-next-line no-restricted-syntax
+  for (const path of candidatePaths(href)) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const resp = await fetch(path);
+      if (resp.ok) {
+        // eslint-disable-next-line no-await-in-loop
+        const doc = new DOMParser().parseFromString(await resp.text(), 'text/html');
+        const meta = (name) => [...doc.querySelectorAll(`meta[name="${name}" i], meta[property="${name}" i]`)]
+          .pop()?.content || '';
+        // hero rows: image | title | text
+        const [imageRow, titleRow] = [...(doc.querySelector('.hero')?.children || [])];
+        const img = imageRow?.querySelector('img');
+        // image paths in the page are relative to the page, not to this one
+        const src = img?.getAttribute('src') || meta('og:image');
+        return {
+          path,
+          title: titleRow?.textContent.trim() || meta('og:title') || doc.title,
+          subtitle: meta('subtitle'),
+          image: src ? new URL(src, resp.url).href : '',
+          imageAlt: img?.getAttribute('alt') || '',
+        };
+      }
+    } catch (e) {
+      // try the next candidate
+    }
+  }
+  return null;
+}
+
+function buildImage(src, alt) {
+  const image = document.createElement('div');
+  image.className = 'content-list-image';
+  const url = new URL(src, window.location.href);
+  if (url.origin === window.location.origin) {
+    image.append(createOptimizedPicture(url.href, alt, false, [{ width: '400' }]));
+  } else {
+    const img = document.createElement('img');
+    img.src = url.href;
+    img.alt = alt;
+    img.loading = 'lazy';
+    image.append(img);
+  }
+  return image;
+}
+
+/**
+ * Builds one content item from a page reference: the page's hero image and
+ * title, then its subtitle.
  * @param {Element} source authored item (link)
  * @returns {Element} item
  */
@@ -49,27 +94,17 @@ function buildItem(source) {
   link.href = href;
   link.textContent = source.textContent.trim() || href;
   heading.append(link);
-  const text = document.createElement('p');
-  item.append(heading, text);
+  item.append(heading);
 
-  fetchPageSummary(href).then((summary) => {
-    if (!summary) return;
-    if (summary.title) link.textContent = summary.title;
-    if (summary.description) text.textContent = summary.description;
-    if (summary.image) {
-      const image = document.createElement('div');
-      image.className = 'content-list-image';
-      const src = new URL(summary.image, window.location.href);
-      if (src.origin === window.location.origin) {
-        image.append(createOptimizedPicture(src.href, summary.imageAlt, false, [{ width: '400' }]));
-      } else {
-        const img = document.createElement('img');
-        img.src = src.href;
-        img.alt = summary.imageAlt;
-        img.loading = 'lazy';
-        image.append(img);
-      }
-      item.prepend(image);
+  fetchTeaser(href).then((teaser) => {
+    if (!teaser) return;
+    link.href = teaser.path;
+    if (teaser.title) link.textContent = teaser.title;
+    if (teaser.image) item.prepend(buildImage(teaser.image, teaser.imageAlt));
+    if (teaser.subtitle) {
+      const subtitle = document.createElement('p');
+      subtitle.textContent = teaser.subtitle;
+      item.append(subtitle);
     }
   });
   return item;

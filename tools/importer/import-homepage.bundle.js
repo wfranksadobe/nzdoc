@@ -174,12 +174,46 @@ var CustomImportScript = (() => {
 
   // tools/importer/parsers/columns.js
   var SOURCE_ORIGIN3 = "https://www.doc.govt.nz";
+  var SITE_ROOT = "/content/nzdoc";
+  var MAX_ITEMS = 4;
   function text2(el) {
     return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
   }
+  function toContentPath(href) {
+    const url = new URL(href, SOURCE_ORIGIN3);
+    if (url.origin !== SOURCE_ORIGIN3) return url.href;
+    return `${SITE_ROOT}${url.pathname.replace(/\/$/, "")}`;
+  }
+  function hinted3(document, field, node) {
+    const frag = document.createDocumentFragment();
+    frag.appendChild(document.createComment(` field:${field} `));
+    frag.appendChild(node);
+    return frag;
+  }
+  function linkParagraph(document, href, label) {
+    const p = document.createElement("p");
+    const a = document.createElement("a");
+    a.href = href;
+    a.textContent = label;
+    p.append(a);
+    return p;
+  }
+  function contentList(document, widget) {
+    const items = document.createDocumentFragment();
+    [...widget.querySelectorAll(".widget__content .card h3 a")].slice(0, MAX_ITEMS).forEach((a, i) => {
+      const path = toContentPath(a.getAttribute("href"));
+      items.append(hinted3(document, `items_item${i + 1}`, linkParagraph(document, path, path)));
+    });
+    const more = widget.querySelector(".widget__footer a");
+    const moreCell = more ? hinted3(document, "more", linkParagraph(document, new URL(more.getAttribute("href"), SOURCE_ORIGIN3).href, "More")) : "";
+    return WebImporter.Blocks.createBlock(document, {
+      name: "Content List",
+      cells: [[items.childNodes.length ? items : ""], [moreCell]]
+    });
+  }
   function parse3(element, { document }) {
-    const moreLinks = [];
-    const columns = [...element.querySelectorAll(":scope > .widget")].map((widget) => {
+    const widgets = [...element.querySelectorAll(":scope > .widget")];
+    const columns = widgets.map((widget) => {
       const cell = document.createElement("div");
       const title = widget.querySelector(".widget__title h2, h2");
       if (title) {
@@ -187,13 +221,10 @@ var CustomImportScript = (() => {
         h2.textContent = text2(title);
         cell.append(h2);
       }
-      const more = widget.querySelector(".widget__footer a");
-      if (more) moreLinks.push(`${text2(title)}: ${new URL(more.getAttribute("href"), SOURCE_ORIGIN3).href}`);
       return cell;
     });
     const block = WebImporter.Blocks.createBlock(document, { name: "Columns", cells: [columns] });
-    block.dataset.contentListMore = moreLinks.join("; ");
-    element.replaceWith(block);
+    element.replaceWith(block, ...widgets.map((widget) => contentList(document, widget)));
   }
 
   // tools/importer/parsers/feedback.js
@@ -276,7 +307,7 @@ var CustomImportScript = (() => {
   ];
   var PAGE_TEMPLATE = {
     "name": "homepage",
-    "description": "DOC homepage - staged migration: hero, homepage panels (cards + columns, content items pending) and page feedback",
+    "description": "DOC homepage - staged migration: hero, homepage panels (cards, columns + content lists) and page feedback",
     "urls": [
       "https://www.doc.govt.nz/"
     ],
@@ -298,6 +329,11 @@ var CustomImportScript = (() => {
         "instances": [
           ".doc-homepage-layout__content_bottom"
         ]
+      },
+      {
+        "name": "content-list",
+        "instances": [],
+        "note": "created by the columns parser (siblings after Columns)"
       },
       {
         "name": "feedback",
@@ -326,7 +362,8 @@ var CustomImportScript = (() => {
         ],
         "blocks": [
           "cards",
-          "columns"
+          "columns",
+          "content-list"
         ],
         "defaultContent": []
       },
@@ -427,7 +464,6 @@ var CustomImportScript = (() => {
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const damImages = mapImagesToDam(main);
-      const contentListMore = [...main.querySelectorAll("[data-content-list-more]")].map((el) => el.dataset.contentListMore).join("; ");
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
       return [{
@@ -437,8 +473,7 @@ var CustomImportScript = (() => {
           title: document.title,
           template: PAGE_TEMPLATE.name,
           blocks: pageBlocks.map((b) => b.name),
-          damImages: damImages.map((i) => `${i.source} -> ${i.dam}`).join("; "),
-          contentListMore
+          damImages: damImages.map((i) => `${i.source} -> ${i.dam}`).join("; ")
         }
       }];
     }
