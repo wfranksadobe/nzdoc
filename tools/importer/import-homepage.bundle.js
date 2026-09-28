@@ -167,6 +167,24 @@ var CustomImportScript = (() => {
       { id: "section-2", name: "Feedback", selector: [".feedbackContainer"], blocks: ["feedback"], defaultContent: [] }
     ]
   };
+  var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
+  function mapHeroImagesToDam(main) {
+    const mapped = /* @__PURE__ */ new Map();
+    main.querySelectorAll("table").forEach((table) => {
+      const name = table.querySelector("th, td");
+      if (!name || !/^hero\b/i.test(name.textContent.trim())) return;
+      table.querySelectorAll("img").forEach((img) => {
+        const source = img.getAttribute("src");
+        const file = new URL(source).pathname.split("/").pop();
+        mapped.set(source, `${HERO_DAM_FOLDER}/${file}`);
+      });
+    });
+    main.querySelectorAll("img").forEach((img) => {
+      const dam = mapped.get(img.getAttribute("src"));
+      if (dam) img.setAttribute("src", dam);
+    });
+    return [...mapped].map(([source, dam]) => ({ source, dam }));
+  }
   function executeTransformers(hookName, element, payload) {
     const enhancedPayload = __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE });
     transformers.forEach((transformerFn) => {
@@ -216,6 +234,7 @@ var CustomImportScript = (() => {
       WebImporter.rules.createMetadata(main, document);
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
+      const heroImages = mapHeroImagesToDam(main);
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
       return [{
@@ -224,7 +243,8 @@ var CustomImportScript = (() => {
         report: {
           title: document.title,
           template: PAGE_TEMPLATE.name,
-          blocks: pageBlocks.map((b) => b.name)
+          blocks: pageBlocks.map((b) => b.name),
+          heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; ")
         }
       }];
     }

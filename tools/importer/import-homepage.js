@@ -36,6 +36,33 @@ const PAGE_TEMPLATE = {
   ],
 };
 
+// all page hero images are stored in one DAM folder
+const HERO_DAM_FOLDER = '/content/dam/nzdoc/heros';
+
+/**
+ * Points every hero image (and any other use of the same image, e.g. the
+ * metadata image) at the shared hero DAM folder, keeping the file name.
+ * @param {Element} main - the transformed page
+ * @returns {Array} { source, dam } pairs for the images that were mapped
+ */
+function mapHeroImagesToDam(main) {
+  const mapped = new Map();
+  main.querySelectorAll('table').forEach((table) => {
+    const name = table.querySelector('th, td');
+    if (!name || !/^hero\b/i.test(name.textContent.trim())) return;
+    table.querySelectorAll('img').forEach((img) => {
+      const source = img.getAttribute('src');
+      const file = new URL(source).pathname.split('/').pop();
+      mapped.set(source, `${HERO_DAM_FOLDER}/${file}`);
+    });
+  });
+  main.querySelectorAll('img').forEach((img) => {
+    const dam = mapped.get(img.getAttribute('src'));
+    if (dam) img.setAttribute('src', dam);
+  });
+  return [...mapped].map(([source, dam]) => ({ source, dam }));
+}
+
 /**
  * Execute all page transformers for a specific hook
  * @param {string} hookName - 'beforeTransform' or 'afterTransform'
@@ -107,6 +134,7 @@ export default {
     WebImporter.rules.createMetadata(main, document);
     WebImporter.rules.transformBackgroundImages(main, document);
     WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
+    const heroImages = mapHeroImagesToDam(main);
 
     // 6. path: the homepage maps to /index
     const rawPath = new URL(params.originalURL).pathname
@@ -121,6 +149,7 @@ export default {
         title: document.title,
         template: PAGE_TEMPLATE.name,
         blocks: pageBlocks.map((b) => b.name),
+        heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join('; '),
       },
     }];
   },

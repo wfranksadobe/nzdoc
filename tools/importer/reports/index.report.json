@@ -2,11 +2,12 @@
   "status": "success",
   "url": "https://www.doc.govt.nz/",
   "path": "index",
-  "timestamp": "2026-09-28T02:02:52.120Z",
+  "timestamp": "2026-09-28T02:13:43.592Z",
   "title": "EMA: Department of Conservation",
   "template": "homepage",
   "blocks": [
     "hero",
     "feedback"
-  ]
+  ],
+  "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/9b48a55da5974906b6d65a89fb9d5d06/kura-tawhiti-hero.jpg -> /content/dam/nzdoc/heros/kura-tawhiti-hero.jpg"
 }
