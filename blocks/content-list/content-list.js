@@ -19,7 +19,10 @@ async function fetchPageSummary(href) {
     const resp = await fetch(url.pathname);
     if (!resp.ok) return null;
     const doc = new DOMParser().parseFromString(await resp.text(), 'text/html');
-    const meta = (name) => doc.querySelector(`meta[property="${name}"], meta[name="${name}"]`)?.content || '';
+    // metadata names can differ in case between environments; an explicitly
+    // authored value (e.g. og:title) is written after the derived one, so use the last
+    const meta = (name) => [...doc.querySelectorAll(`meta[property="${name}" i], meta[name="${name}" i]`)]
+      .pop()?.content || '';
     return {
       title: meta('og:title') || doc.title,
       description: meta('description') || meta('og:description'),

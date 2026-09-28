@@ -27,9 +27,13 @@ export default function transform(hookName, element, payload) {
   }
 
   if (hookName === 'afterTransform') {
-    // nested blocks (e.g. a content list inside columns) stay inside their parent
+    // keep only the blocks produced by this template's parsers: source pages can
+    // contain their own tables, which must not end up in the migrated page.
+    // Nested blocks (e.g. a content list inside columns) stay inside their parent.
+    const templateBlocks = (template?.blocks || []).map((b) => b.name);
     const blocks = [...element.querySelectorAll('table')]
-      .filter((table) => !table.parentElement.closest('table'));
+      .filter((table) => !table.parentElement.closest('table'))
+      .filter((table) => !templateBlocks.length || templateBlocks.includes(blockName(table)));
     const sectionOf = (table) => {
       const name = blockName(table);
       const index = (template?.sections || []).findIndex((s) => s.blocks.includes(name));

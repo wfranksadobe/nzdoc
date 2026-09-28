@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
+  "path": "parks-and-recreation/things-to-do/fishing/whitebaiting",
+  "timestamp": "2026-09-28T03:05:51.019Z",
+  "title": "EMA: Whitebaiting: Things to do",
+  "template": "article-hero",
+  "blocks": [
+    "breadcrumb",
+    "hero"
+  ],
+  "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/7844f904c74341bf9c8ddaefc05726ce/whitebaiter-in-westland-hero.jpg -> /content/dam/nzdoc/heros/whitebaiter-in-westland-hero.jpg"
+}

@@ -1,0 +1,59 @@
+/* the breadcrumb shares the first section with the hero */
+main > .section.breadcrumb-container {
+  position: relative;
+}
+
+.breadcrumb {
+  color: rgb(56 66 70);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 8px;
+  max-width: max-content;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a:any-link {
+  color: rgb(0 102 164);
+  text-decoration: underline;
+}
+
+.breadcrumb svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  color: rgb(123 123 123);
+}
+
+@media (width >= 900px) {
+  /* overlay the top of the hero, aligned to the content column */
+  main > .section.breadcrumb-container > .breadcrumb-wrapper {
+    position: absolute;
+    inset: 0 0 auto;
+    z-index: 2;
+  }
+
+  .breadcrumb nav {
+    max-width: 65%;
+  }
+
+  .breadcrumb ol {
+    padding: 8px 16px;
+    background-color: rgb(255 255 255 / 85%);
+  }
+}

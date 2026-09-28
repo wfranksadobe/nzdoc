@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
+  "path": "news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land",
+  "timestamp": "2026-09-28T03:06:18.888Z",
+  "title": "EMA: Government invests in cleaning up contaminated Crown land: Media release 23 September 2026",
+  "template": "article-hero",
+  "blocks": [
+    "breadcrumb",
+    "hero"
+  ],
+  "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/0e132745d3954aa8848ca8a263fb8400/puhipuhi-1920.jpg -> /content/dam/nzdoc/heros/puhipuhi-1920.jpg"
+}

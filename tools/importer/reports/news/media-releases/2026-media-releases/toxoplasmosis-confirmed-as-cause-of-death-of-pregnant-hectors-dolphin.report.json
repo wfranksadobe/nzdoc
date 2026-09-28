@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/",
+  "path": "news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin",
+  "timestamp": "2026-09-28T03:06:32.869Z",
+  "title": "EMA: Toxoplasmosis confirmed as cause of death of pregnant Hector’s dolphin: Media release 22 September 2026",
+  "template": "article-hero",
+  "blocks": [
+    "breadcrumb",
+    "hero"
+  ],
+  "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/adba4374a3f54a75af306e54efe345f5/hectors-deceased-1920.jpg -> /content/dam/nzdoc/heros/hectors-deceased-1920.jpg"
+}

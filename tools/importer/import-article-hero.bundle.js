@@ -35,32 +35,63 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-homepage.js
-  var import_homepage_exports = {};
-  __export(import_homepage_exports, {
-    default: () => import_homepage_default
+  // tools/importer/import-article-hero.js
+  var import_article_hero_exports = {};
+  __export(import_article_hero_exports, {
+    default: () => import_article_hero_default
   });
 
-  // tools/importer/parsers/hero.js
+  // tools/importer/parsers/breadcrumb.js
   var SOURCE_ORIGIN = "https://www.doc.govt.nz";
+  function text(el) {
+    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+  function parse(element, { document }) {
+    const ul = document.createElement("ul");
+    [...element.querySelectorAll("a")].forEach((a) => {
+      const href = a.getAttribute("href");
+      const li = document.createElement("li");
+      const link = document.createElement("a");
+      link.href = href === "/" ? "/" : new URL(href, SOURCE_ORIGIN).href;
+      link.textContent = text(a);
+      li.append(link);
+      ul.append(li);
+    });
+    const rest = element.cloneNode(true);
+    rest.querySelectorAll("a, svg").forEach((el) => el.remove());
+    const current = text(rest);
+    if (current) {
+      const li = document.createElement("li");
+      li.textContent = current;
+      ul.append(li);
+    }
+    const frag = document.createDocumentFragment();
+    frag.appendChild(document.createComment(" field:items "));
+    frag.appendChild(ul);
+    const block = WebImporter.Blocks.createBlock(document, { name: "Breadcrumb", cells: [[frag]] });
+    element.replaceWith(block);
+  }
+
+  // tools/importer/parsers/hero.js
+  var SOURCE_ORIGIN2 = "https://www.doc.govt.nz";
   function hinted(document, field, ...content) {
     const frag = document.createDocumentFragment();
     frag.appendChild(document.createComment(` field:${field} `));
     content.forEach((c) => frag.appendChild(c));
     return frag;
   }
-  function parse(element, { document }) {
+  function parse2(element, { document }) {
     const img = element.querySelector("img.hero__image, .hero__image-container img, img");
     const heading = element.querySelector("h1");
     const links = [...element.querySelectorAll("a")];
     const cells = [];
     if (img) {
-      const picture2 = document.createElement("picture");
+      const picture = document.createElement("picture");
       const image = document.createElement("img");
-      image.src = new URL(img.getAttribute("src"), SOURCE_ORIGIN).href;
+      image.src = new URL(img.getAttribute("src"), SOURCE_ORIGIN2).href;
       image.alt = img.getAttribute("alt") || "";
-      picture2.append(image);
-      cells.push([hinted(document, "image", picture2)]);
+      picture.append(image);
+      cells.push([hinted(document, "image", picture)]);
     } else {
       cells.push([""]);
     }
@@ -69,15 +100,15 @@ var CustomImportScript = (() => {
       const ul = document.createElement("ul");
       links.forEach((a) => {
         const li = document.createElement("li");
-        const link2 = document.createElement("a");
-        link2.href = new URL(a.getAttribute("href"), SOURCE_ORIGIN).href;
-        link2.textContent = a.textContent.trim();
+        const link = document.createElement("a");
+        link.href = new URL(a.getAttribute("href"), SOURCE_ORIGIN2).href;
+        link.textContent = a.textContent.trim();
         if (/bg-doc-gold/.test(a.className)) {
           const strong = document.createElement("strong");
-          strong.append(link2);
+          strong.append(link);
           li.append(strong);
         } else {
-          li.append(link2);
+          li.append(link);
         }
         ul.append(li);
       });
@@ -86,146 +117,6 @@ var CustomImportScript = (() => {
       cells.push([""]);
     }
     const block = WebImporter.Blocks.createBlock(document, { name: "Hero", cells });
-    element.replaceWith(block);
-  }
-
-  // tools/importer/parsers/cards.js
-  var SOURCE_ORIGIN2 = "https://www.doc.govt.nz";
-  var DATE_PATTERN = new RegExp("^[0-9]{1,2} [A-Za-z]+ [0-9]{4}$");
-  function abs(href) {
-    return new URL(href, SOURCE_ORIGIN2).href;
-  }
-  function text(el) {
-    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
-  }
-  function hinted2(document, field, ...content) {
-    const frag = document.createDocumentFragment();
-    frag.appendChild(document.createComment(` field:${field} `));
-    content.forEach((c) => frag.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
-    return frag;
-  }
-  function picture(document, img) {
-    const pic = document.createElement("picture");
-    const image = document.createElement("img");
-    image.src = abs(img.getAttribute("src"));
-    image.alt = img.getAttribute("alt") || "";
-    pic.append(image);
-    return pic;
-  }
-  function link(document, href, label) {
-    const a = document.createElement("a");
-    a.href = abs(href);
-    a.textContent = label || abs(href);
-    return a;
-  }
-  function paragraphs(document, container) {
-    const frag = document.createDocumentFragment();
-    [...container.querySelectorAll("p")].forEach((p) => {
-      const copy = document.createElement("p");
-      copy.textContent = text(p);
-      frag.append(copy);
-    });
-    return frag;
-  }
-  function row(document, values) {
-    return ["type", "image", "title", "date", "contentHeading", "link", "text", "more"].map((field) => values[field] ? hinted2(document, field, values[field]) : "");
-  }
-  function shortWalks(document, card) {
-    const img = card.querySelector("img");
-    const titleLink = card.querySelector("a.card_link, a");
-    return row(document, {
-      type: "short-walks",
-      image: img ? picture(document, img) : null,
-      title: text(card.querySelector("h2")),
-      link: titleLink ? link(document, titleLink.getAttribute("href"), text(card.querySelector("h2"))) : null,
-      text: paragraphs(document, card)
-    });
-  }
-  function blogDate(card) {
-    if (!card) return "";
-    const candidates = [...card.querySelectorAll("*")].flatMap((el) => [...el.childNodes]).map((node) => node.nodeType === 3 || node.nodeType === 1 ? node.textContent.replace(/\s+/g, " ").trim() : "");
-    return candidates.find((t) => DATE_PATTERN.test(t)) || "";
-  }
-  function blog(document, widget) {
-    const card = widget.querySelector(".card");
-    const img = card == null ? void 0 : card.querySelector("img");
-    const postLink = card == null ? void 0 : card.querySelector("h3 a");
-    const more = widget.querySelector(".widget__footer a");
-    return row(document, {
-      type: "blog",
-      image: img ? picture(document, img) : null,
-      title: text(widget.querySelector(".widget__title h2, h2")),
-      date: blogDate(card),
-      contentHeading: text(postLink),
-      link: postLink ? link(document, postLink.getAttribute("href"), text(postLink)) : null,
-      text: card ? paragraphs(document, card) : null,
-      more: more ? link(document, more.getAttribute("href"), "More") : null
-    });
-  }
-  function parse2(element, { document }) {
-    const cells = [];
-    [...element.children].forEach((child) => {
-      if (child.classList.contains("widget")) cells.push(blog(document, child));
-      else if (child.classList.contains("card")) cells.push(shortWalks(document, child));
-    });
-    const block = WebImporter.Blocks.createBlock(document, { name: "Cards", cells });
-    element.replaceWith(block);
-  }
-
-  // tools/importer/parsers/columns.js
-  var SOURCE_ORIGIN3 = "https://www.doc.govt.nz";
-  function text2(el) {
-    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
-  }
-  function parse3(element, { document }) {
-    const moreLinks = [];
-    const columns = [...element.querySelectorAll(":scope > .widget")].map((widget) => {
-      const cell = document.createElement("div");
-      const title = widget.querySelector(".widget__title h2, h2");
-      if (title) {
-        const h2 = document.createElement("h2");
-        h2.textContent = text2(title);
-        cell.append(h2);
-      }
-      const more = widget.querySelector(".widget__footer a");
-      if (more) moreLinks.push(`${text2(title)}: ${new URL(more.getAttribute("href"), SOURCE_ORIGIN3).href}`);
-      return cell;
-    });
-    const block = WebImporter.Blocks.createBlock(document, { name: "Columns", cells: [columns] });
-    block.dataset.contentListMore = moreLinks.join("; ");
-    element.replaceWith(block);
-  }
-
-  // tools/importer/parsers/feedback.js
-  function text3(el) {
-    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
-  }
-  function hintedCell(document, fields) {
-    const frag = document.createDocumentFragment();
-    fields.forEach(([field, value]) => {
-      if (!value) return;
-      frag.appendChild(document.createComment(` field:${field} `));
-      const p = document.createElement("p");
-      p.textContent = value;
-      frag.appendChild(p);
-    });
-    return frag;
-  }
-  function parse4(element, { document }) {
-    const question = text3(element.querySelector("#stepQuestion .font-bold, #stepQuestion div > div:first-child"));
-    const yes = text3(element.querySelector("#btnFeedbackYes"));
-    const no = text3(element.querySelector("#btnFeedbackNo"));
-    const thanks = text3(element.querySelector("#stepThanks"));
-    const heading = text3(element.querySelector("#stepForm h2"));
-    const label = text3(element.querySelector("#stepForm label"));
-    const submit = text3(element.querySelector("#stepForm button[type=submit], #stepForm button"));
-    const cells = [
-      [hintedCell(document, [["question", question]])],
-      [hintedCell(document, [["answer_yes", yes], ["answer_no", no]])],
-      [hintedCell(document, [["thanksMessage", thanks]])],
-      [hintedCell(document, [["form_heading", heading], ["form_label", label], ["form_submit", submit]])]
-    ];
-    const block = WebImporter.Blocks.createBlock(document, { name: "Feedback", cells });
     element.replaceWith(block);
   }
 
@@ -264,80 +155,51 @@ var CustomImportScript = (() => {
     }
   }
 
-  // tools/importer/import-homepage.js
+  // tools/importer/import-article-hero.js
   var parsers = {
-    hero: parse,
-    cards: parse2,
-    columns: parse3,
-    feedback: parse4
+    breadcrumb: parse,
+    hero: parse2
   };
   var transformers = [
     transform
   ];
   var PAGE_TEMPLATE = {
-    "name": "homepage",
-    "description": "DOC homepage - staged migration: hero, homepage panels (cards + columns, content items pending) and page feedback",
+    "name": "article-hero",
+    "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb and hero only",
     "urls": [
-      "https://www.doc.govt.nz/"
+      "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
+      "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
+      "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
+      "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/",
+      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
+      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
+      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
+      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/"
     ],
     "blocks": [
+      {
+        "name": "breadcrumb",
+        "instances": [
+          'nav[aria-label="Breadcrumb"]'
+        ]
+      },
       {
         "name": "hero",
         "instances": [
           ".hero"
-        ]
-      },
-      {
-        "name": "cards",
-        "instances": [
-          ".doc-homepage-layout__content_top"
-        ]
-      },
-      {
-        "name": "columns",
-        "instances": [
-          ".doc-homepage-layout__content_bottom"
-        ]
-      },
-      {
-        "name": "feedback",
-        "instances": [
-          ".feedbackContainer"
         ]
       }
     ],
     "sections": [
       {
         "id": "section-1",
-        "name": "Hero",
+        "name": "Breadcrumb and hero",
         "selector": [
           ".hero"
         ],
         "blocks": [
+          "breadcrumb",
           "hero"
-        ],
-        "defaultContent": []
-      },
-      {
-        "id": "section-2",
-        "name": "Homepage panels",
-        "selector": [
-          ".doc-homepage-layout"
-        ],
-        "blocks": [
-          "cards",
-          "columns"
-        ],
-        "defaultContent": []
-      },
-      {
-        "id": "section-3",
-        "name": "Feedback",
-        "selector": [
-          ".feedbackContainer"
-        ],
-        "blocks": [
-          "feedback"
         ],
         "defaultContent": []
       }
@@ -387,7 +249,7 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_homepage_default = {
+  var import_article_hero_default = {
     transform: (payload) => {
       const { document, url, params } = payload;
       const main = document.body;
@@ -411,7 +273,6 @@ var CustomImportScript = (() => {
       WebImporter.rules.transformBackgroundImages(main, document);
       WebImporter.rules.adjustImageUrls(main, url, params.originalURL);
       const heroImages = mapHeroImagesToDam(main);
-      const contentListMore = [...main.querySelectorAll("[data-content-list-more]")].map((el) => el.dataset.contentListMore).join("; ");
       const rawPath = new URL(params.originalURL).pathname.replace(/\/$/, "").replace(/\.html?$/, "");
       const path = WebImporter.FileUtils.sanitizePath(rawPath === "" ? "/index" : rawPath);
       return [{
@@ -421,11 +282,10 @@ var CustomImportScript = (() => {
           title: document.title,
           template: PAGE_TEMPLATE.name,
           blocks: pageBlocks.map((b) => b.name),
-          heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; "),
-          contentListMore
+          heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; ")
         }
       }];
     }
   };
-  return __toCommonJS(import_homepage_exports);
+  return __toCommonJS(import_article_hero_exports);
 })();

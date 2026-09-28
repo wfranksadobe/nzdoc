@@ -68,6 +68,48 @@
           "defaultContent": []
         }
       ]
+    },
+    {
+      "name": "article-hero",
+      "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb and hero only",
+      "urls": [
+        "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
+        "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
+        "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
+        "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/",
+        "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
+        "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
+        "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
+        "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/"
+      ],
+      "blocks": [
+        {
+          "name": "breadcrumb",
+          "instances": [
+            "nav[aria-label=\"Breadcrumb\"]"
+          ]
+        },
+        {
+          "name": "hero",
+          "instances": [
+            ".hero"
+          ]
+        }
+      ],
+      "sections": [
+        {
+          "id": "section-1",
+          "name": "Breadcrumb and hero",
+          "selector": [
+            ".hero"
+          ],
+          "blocks": [
+            "breadcrumb",
+            "hero"
+          ],
+          "defaultContent": []
+        }
+      ]
     }
   ]
 }

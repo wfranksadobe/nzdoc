@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "url": "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
+  "path": "news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance",
+  "timestamp": "2026-09-28T03:06:12.822Z",
+  "title": "EMA: Funding boost for bird flu surveillance: Media release 24 September 2026",
+  "template": "article-hero",
+  "blocks": [
+    "breadcrumb",
+    "hero"
+  ],
+  "heroImages": "https://www.doc.govt.nz/thumbs/hero/globalassets/images/nature/native-animals/birds/brown-skua/brown-skua-1920.jpg -> /content/dam/nzdoc/heros/brown-skua-1920.jpg"
+}

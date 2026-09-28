@@ -161,6 +161,19 @@
     ]
   },
   {
+    "id": "breadcrumb",
+    "fields": [
+      {
+        "component": "richtext",
+        "valueType": "string",
+        "name": "items",
+        "label": "Items",
+        "description": "Bulleted list of links to the ancestor pages, ending with the current page title (not linked)",
+        "value": ""
+      }
+    ]
+  },
+  {
     "id": "card",
     "fields": [
       {
