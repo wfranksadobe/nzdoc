@@ -2,12 +2,14 @@
   "status": "success",
   "url": "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/",
   "path": "news/events/national-events/national-wild-goat-hunting-competition",
-  "timestamp": "2026-09-28T03:14:05.267Z",
+  "timestamp": "2026-09-28T03:54:14.897Z",
   "title": "EMA: National Wild Goat Hunting Competition 2026",
   "template": "article-hero",
   "blocks": [
     "breadcrumb",
-    "hero"
+    "hero",
+    "feedback"
   ],
+  "subtitle": "Turn your wild goat hunt – whether it's your first or your fourth, solo or with mates – into meaningful action. Help reduce pressure on New Zealand's landscapes and go in the draw to win.",
   "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/f7be0a20cbaa45f1b78b2d52b6d366b2/national-wild-goat-competition-2026-1920.jpg -> /content/dam/nzdoc/heros/national-wild-goat-competition-2026-1920.jpg"
 }

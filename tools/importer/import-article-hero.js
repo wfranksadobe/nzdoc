@@ -4,6 +4,7 @@
 // PARSER IMPORTS
 import breadcrumbParser from './parsers/breadcrumb.js';
 import heroParser from './parsers/hero.js';
+import feedbackParser from './parsers/feedback.js';
 
 // TRANSFORMER IMPORTS
 import docCleanupTransformer from './transformers/doc-cleanup.js';
@@ -12,6 +13,7 @@ import docCleanupTransformer from './transformers/doc-cleanup.js';
 const parsers = {
   breadcrumb: breadcrumbParser,
   hero: heroParser,
+  feedback: feedbackParser,
 };
 
 // TRANSFORMER REGISTRY (doc-cleanup also creates the section breaks between kept blocks)
@@ -22,7 +24,7 @@ const transformers = [
 // PAGE TEMPLATE CONFIGURATION - embedded from page-templates.json
 const PAGE_TEMPLATE = {
   "name": "article-hero",
-  "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb and hero only",
+  "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb, hero, subtitle and page feedback only",
   "urls": [
     "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
     "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
@@ -45,6 +47,13 @@ const PAGE_TEMPLATE = {
       "instances": [
         ".hero"
       ]
+    },
+    {
+      "name": "feedback",
+      "instances": [
+        ".feedbackContainer"
+      ],
+      "note": "only the Featured articles have page feedback on the source"
     }
   ],
   "sections": [
@@ -59,9 +68,51 @@ const PAGE_TEMPLATE = {
         "hero"
       ],
       "defaultContent": []
+    },
+    {
+      "id": "section-2",
+      "name": "Subtitle",
+      "selector": [
+        ".doc-standard-overview__intro"
+      ],
+      "blocks": [],
+      "defaultContent": [
+        ".doc-standard-overview__intro-text .lead"
+      ],
+      "note": "the intro lead becomes a single h2 title, directly under the hero"
+    },
+    {
+      "id": "section-3",
+      "name": "Feedback",
+      "selector": [
+        ".feedbackContainer"
+      ],
+      "blocks": [
+        "feedback"
+      ],
+      "defaultContent": []
     }
   ]
 };
+
+// the page subtitle: the source intro lead, migrated as a single title
+const SUBTITLE_SELECTOR = '.doc-standard-overview__intro-text .lead';
+
+/**
+ * Turns the source intro lead (a styled span) into the subtitle title (h2),
+ * keeping its class so the subtitle section's default content still finds it.
+ * @param {Document} document - the source document
+ * @returns {string} subtitle text, or '' when the page has none
+ */
+function buildSubtitle(document) {
+  const lead = document.querySelector(SUBTITLE_SELECTOR);
+  if (!lead) return '';
+  const title = document.createElement('h2');
+  title.className = lead.className;
+  title.textContent = lead.textContent.replace(/\s+/g, ' ').trim();
+  lead.replaceWith(title);
+  return title.textContent;
+}
 
 // all page hero images are stored in one DAM folder
 const HERO_DAM_FOLDER = '/content/dam/nzdoc/heros';
@@ -152,7 +203,10 @@ export default {
       }
     });
 
-    // 4. afterTransform (keep only parsed blocks, add section breaks)
+    // 3b. subtitle (section default content)
+    const subtitle = buildSubtitle(document);
+
+    // 4. afterTransform (keep only parsed blocks and the subtitle, add section breaks)
     executeTransformers('afterTransform', main, payload);
 
     // 5. built-in rules
@@ -176,6 +230,7 @@ export default {
         title: document.title,
         template: PAGE_TEMPLATE.name,
         blocks: pageBlocks.map((b) => b.name),
+        subtitle,
         heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join('; '),
       },
     }];

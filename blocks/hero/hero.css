@@ -1,5 +1,6 @@
+/* the gap under the hero belongs to the next section, so a subtitle can sit flush */
 main > .section.hero-container {
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 main > .section.hero-container + .section {

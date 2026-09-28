@@ -2,12 +2,14 @@
   "status": "success",
   "url": "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
   "path": "news/issues/bird-flu-updates",
-  "timestamp": "2026-09-28T03:05:43.233Z",
+  "timestamp": "2026-09-28T03:53:56.352Z",
   "title": "EMA: Bird flu updates: Issues",
   "template": "article-hero",
   "blocks": [
     "breadcrumb",
-    "hero"
+    "hero",
+    "feedback"
   ],
+  "subtitle": "H5 bird flu (H5N1 avian influenza) has been detected in New Zealand.",
   "heroImages": "https://www.doc.govt.nz/thumbs/hero/globalassets/images/nature/native-animals/birds/brown-skua/brown-skua-1920.jpg -> /content/dam/nzdoc/heros/brown-skua-1920.jpg"
 }

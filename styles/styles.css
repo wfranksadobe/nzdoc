@@ -259,6 +259,22 @@ main > .section:first-of-type {
   }
 }
 
+/* page subtitle: a section holding a single title, directly under the hero */
+main > .section.hero-container + .section:has(> .default-content-wrapper:only-child > :is(h1, h2, h3, h4, h5, h6):only-child) {
+  margin-top: 0;
+}
+
+main > .section.hero-container + .section > .default-content-wrapper:only-child > :is(h1, h2, h3, h4, h5, h6):only-child {
+  margin: 0;
+  padding: 16px 24px 48px;
+  background-color: rgb(255 255 255);
+  color: rgb(71 102 94);
+  font-family: 'Zilla Slab', 'Courier New', monospace;
+  font-size: 32px;
+  font-weight: 300;
+  line-height: 1.3;
+}
+
 /* section metadata */
 main .section.light,
 main .section.highlight {

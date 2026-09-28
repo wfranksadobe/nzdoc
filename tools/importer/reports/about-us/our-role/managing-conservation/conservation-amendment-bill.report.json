@@ -2,12 +2,14 @@
   "status": "success",
   "url": "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
   "path": "about-us/our-role/managing-conservation/conservation-amendment-bill",
-  "timestamp": "2026-09-28T03:05:57.831Z",
+  "timestamp": "2026-09-28T03:54:09.373Z",
   "title": "EMA: Conservation Amendment Bill: Managing conservation",
   "template": "article-hero",
   "blocks": [
     "breadcrumb",
-    "hero"
+    "hero",
+    "feedback"
   ],
+  "subtitle": "The Conservation Amendment Bill aims to modernise the way conservation land is managed, support economic growth, and deliver stronger conservation outcomes.",
   "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/59e382809add463ea8fa893707db334d/whakatane-hero.jpg -> /content/dam/nzdoc/heros/whakatane-hero.jpg"
 }

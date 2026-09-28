@@ -11,8 +11,9 @@ function hrefOf(el) {
 }
 
 /**
- * Paths to try for a referenced page: as authored, then the published path
- * (repository root stripped) and the local preview path (/content/...).
+ * Paths to try for a referenced page, best match first for where this page is
+ * viewed: the repository path on AEM author, /content/... on the local
+ * preview, the published path (repository root stripped) otherwise.
  * @param {string} href page reference
  * @returns {string[]} same-origin candidate paths
  */
@@ -22,12 +23,28 @@ function candidatePaths(href) {
   const path = url.pathname.replace(/\.html$/, '');
   if (!path.startsWith(`${SITE_ROOT}/`)) return [path];
   const rest = path.slice(SITE_ROOT.length);
-  return [...new Set([rest, `/content${rest}`, path])];
+  const here = window.location.pathname;
+  let paths = [rest, `/content${rest}`];
+  if (here.startsWith(`${SITE_ROOT}/`)) paths = [`${path}.html`, rest];
+  else if (here.startsWith('/content/')) paths = [`/content${rest}`, rest];
+  return [...new Set(paths)];
+}
+
+/**
+ * The page subtitle: a section holding a single title, directly after the
+ * section with the hero.
+ * @param {Element} hero the page's hero block
+ * @returns {string} subtitle text, or ''
+ */
+function subtitleOf(hero) {
+  const section = hero?.closest('main > div')?.nextElementSibling;
+  const [title, ...rest] = section ? [...section.children] : [];
+  return title && !rest.length && /^H[1-6]$/.test(title.tagName) ? title.textContent.trim() : '';
 }
 
 /**
  * Reads the teaser for a referenced page: image and title from the page's
- * hero block, subtitle from the page metadata.
+ * hero block, then the page subtitle.
  * @param {string} href page reference
  * @returns {Promise<Object|null>} teaser, or null when the page can't be read
  */
@@ -43,14 +60,15 @@ async function fetchTeaser(href) {
         const meta = (name) => [...doc.querySelectorAll(`meta[name="${name}" i], meta[property="${name}" i]`)]
           .pop()?.content || '';
         // hero rows: image | title | text
-        const [imageRow, titleRow] = [...(doc.querySelector('.hero')?.children || [])];
+        const hero = doc.querySelector('.hero');
+        const [imageRow, titleRow] = [...(hero?.children || [])];
         const img = imageRow?.querySelector('img');
         // image paths in the page are relative to the page, not to this one
         const src = img?.getAttribute('src') || meta('og:image');
         return {
           path,
           title: titleRow?.textContent.trim() || meta('og:title') || doc.title,
-          subtitle: meta('subtitle'),
+          subtitle: subtitleOf(hero),
           image: src ? new URL(src, resp.url).href : '',
           imageAlt: img?.getAttribute('alt') || '',
         };

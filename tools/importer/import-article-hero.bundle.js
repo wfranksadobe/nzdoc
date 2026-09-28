@@ -120,6 +120,39 @@ var CustomImportScript = (() => {
     element.replaceWith(block);
   }
 
+  // tools/importer/parsers/feedback.js
+  function text2(el) {
+    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+  function hintedCell(document, fields) {
+    const frag = document.createDocumentFragment();
+    fields.forEach(([field, value]) => {
+      if (!value) return;
+      frag.appendChild(document.createComment(` field:${field} `));
+      const p = document.createElement("p");
+      p.textContent = value;
+      frag.appendChild(p);
+    });
+    return frag;
+  }
+  function parse3(element, { document }) {
+    const question = text2(element.querySelector("#stepQuestion .font-bold, #stepQuestion div > div:first-child"));
+    const yes = text2(element.querySelector("#btnFeedbackYes"));
+    const no = text2(element.querySelector("#btnFeedbackNo"));
+    const thanks = text2(element.querySelector("#stepThanks"));
+    const heading = text2(element.querySelector("#stepForm h2"));
+    const label = text2(element.querySelector("#stepForm label"));
+    const submit = text2(element.querySelector("#stepForm button[type=submit], #stepForm button"));
+    const cells = [
+      [hintedCell(document, [["question", question]])],
+      [hintedCell(document, [["answer_yes", yes], ["answer_no", no]])],
+      [hintedCell(document, [["thanksMessage", thanks]])],
+      [hintedCell(document, [["form_heading", heading], ["form_label", label], ["form_submit", submit]])]
+    ];
+    const block = WebImporter.Blocks.createBlock(document, { name: "Feedback", cells });
+    element.replaceWith(block);
+  }
+
   // tools/importer/transformers/doc-cleanup.js
   var TITLE_PREFIX = "EMA: ";
   function blockName(table) {
@@ -138,18 +171,23 @@ var CustomImportScript = (() => {
     if (hookName === "afterTransform") {
       const templateBlocks = ((template == null ? void 0 : template.blocks) || []).map((b) => b.name);
       const blocks = [...element.querySelectorAll("table")].filter((table) => !table.parentElement.closest("table")).filter((table) => !templateBlocks.length || templateBlocks.includes(blockName(table)));
-      const sectionOf = (table) => {
-        const name = blockName(table);
+      const defaultContent = ((template == null ? void 0 : template.sections) || []).map((s) => (s.defaultContent || []).flatMap((selector) => [...element.querySelectorAll(selector)]).filter((node) => !node.closest("table")));
+      const sectionOf = (node) => {
+        const byContent = defaultContent.findIndex((nodes2) => nodes2.includes(node));
+        if (byContent !== -1) return byContent;
+        const name = blockName(node);
         const index = ((template == null ? void 0 : template.sections) || []).findIndex((s) => s.blocks.includes(name));
         return index === -1 ? name : index;
       };
+      const nodes = [...blocks, ...defaultContent.flat()].sort((a, b) => a.compareDocumentPosition(b) & 4 ? -1 : 1);
       const kept = [];
       let current;
-      blocks.forEach((table) => {
-        const section = sectionOf(table);
+      nodes.forEach((node) => {
+        const section = sectionOf(node);
         if (kept.length && section !== current) kept.push(document.createElement("hr"));
         current = section;
-        kept.push(table);
+        if (node.tagName !== "TABLE") node.removeAttribute("class");
+        kept.push(node);
       });
       element.replaceChildren(...kept);
     }
@@ -158,14 +196,15 @@ var CustomImportScript = (() => {
   // tools/importer/import-article-hero.js
   var parsers = {
     breadcrumb: parse,
-    hero: parse2
+    hero: parse2,
+    feedback: parse3
   };
   var transformers = [
     transform
   ];
   var PAGE_TEMPLATE = {
     "name": "article-hero",
-    "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb and hero only",
+    "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb, hero, subtitle and page feedback only",
     "urls": [
       "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
       "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
@@ -188,6 +227,13 @@ var CustomImportScript = (() => {
         "instances": [
           ".hero"
         ]
+      },
+      {
+        "name": "feedback",
+        "instances": [
+          ".feedbackContainer"
+        ],
+        "note": "only the Featured articles have page feedback on the source"
       }
     ],
     "sections": [
@@ -202,9 +248,42 @@ var CustomImportScript = (() => {
           "hero"
         ],
         "defaultContent": []
+      },
+      {
+        "id": "section-2",
+        "name": "Subtitle",
+        "selector": [
+          ".doc-standard-overview__intro"
+        ],
+        "blocks": [],
+        "defaultContent": [
+          ".doc-standard-overview__intro-text .lead"
+        ],
+        "note": "the intro lead becomes a single h2 title, directly under the hero"
+      },
+      {
+        "id": "section-3",
+        "name": "Feedback",
+        "selector": [
+          ".feedbackContainer"
+        ],
+        "blocks": [
+          "feedback"
+        ],
+        "defaultContent": []
       }
     ]
   };
+  var SUBTITLE_SELECTOR = ".doc-standard-overview__intro-text .lead";
+  function buildSubtitle(document) {
+    const lead = document.querySelector(SUBTITLE_SELECTOR);
+    if (!lead) return "";
+    const title = document.createElement("h2");
+    title.className = lead.className;
+    title.textContent = lead.textContent.replace(/\s+/g, " ").trim();
+    lead.replaceWith(title);
+    return title.textContent;
+  }
   var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
   function mapHeroImagesToDam(main) {
     const mapped = /* @__PURE__ */ new Map();
@@ -266,6 +345,7 @@ var CustomImportScript = (() => {
           }
         }
       });
+      const subtitle = buildSubtitle(document);
       executeTransformers("afterTransform", main, payload);
       const hr = document.createElement("hr");
       main.appendChild(hr);
@@ -282,6 +362,7 @@ var CustomImportScript = (() => {
           title: document.title,
           template: PAGE_TEMPLATE.name,
           blocks: pageBlocks.map((b) => b.name),
+          subtitle,
           heroImages: heroImages.map((i) => `${i.source} -> ${i.dam}`).join("; ")
         }
       }];
