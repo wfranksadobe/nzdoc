@@ -259,15 +259,45 @@ main > .section:first-of-type {
   }
 }
 
+/*
+ * section content sits on a white panel the width of the content column, as
+ * on the source. Blocks that draw their own panels on the page background
+ * (hero, breadcrumb, cards, columns, feedback) are left out.
+ */
+main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper) {
+  box-sizing: border-box;
+  width: calc(100% - 48px);
+  padding: 16px 24px 32px;
+  background-color: rgb(255 255 255);
+}
+
+/* consecutive panels in a section read as one */
+main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper)
++ div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper) {
+  padding-top: 0;
+}
+
+main > .section > .default-content-wrapper > :first-child {
+  margin-top: 0;
+}
+
+main > .section > .default-content-wrapper > :last-child {
+  margin-bottom: 0;
+}
+
+@media (width >= 900px) {
+  main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper) {
+    width: calc(100% - 64px);
+  }
+}
+
 /* page subtitle: a section holding a single title, directly under the hero */
 main > .section.hero-container + .section:has(> .default-content-wrapper:only-child > :is(h1, h2, h3, h4, h5, h6):only-child) {
   margin-top: 0;
 }
 
 main > .section.hero-container + .section > .default-content-wrapper:only-child > :is(h1, h2, h3, h4, h5, h6):only-child {
-  margin: 0;
-  padding: 16px 24px 48px;
-  background-color: rgb(255 255 255);
+  margin: 0 0 16px;
   color: rgb(71 102 94);
   font-family: 'Zilla Slab', 'Courier New', monospace;
   font-size: 32px;
