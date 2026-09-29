@@ -111,6 +111,88 @@ main > .section.hero-container > .hero-wrapper {
   background-color: var(--hero-gold);
 }
 
+/* image info: a button at the top right opening the caption and credit */
+.hero .hero-caption {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+}
+
+.hero .hero-caption-toggle {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  padding: 4px;
+  background-color: rgb(255 255 255 / 85%);
+  color: var(--hero-text);
+  cursor: pointer;
+}
+
+.hero .hero-caption-toggle:hover,
+.hero .hero-caption-toggle:focus {
+  background-color: rgb(255 255 255 / 85%);
+}
+
+.hero .hero-caption-toggle:focus-visible {
+  outline: 2px solid rgb(0 102 164);
+  outline-offset: 2px;
+}
+
+.hero .hero-caption-toggle svg {
+  width: 24px;
+  height: 24px;
+}
+
+.hero .hero-caption-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hero .hero-caption-bubble {
+  position: absolute;
+  top: 56px;
+  right: 16px;
+  box-sizing: border-box;
+  width: calc(100% - 32px);
+  max-width: 309px;
+  border-radius: 8px;
+  padding: 12px;
+  background-color: #fff;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 5%);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.hero .hero-caption-bubble[hidden] {
+  display: none;
+}
+
+.hero .hero-caption-bubble p {
+  margin: 0;
+}
+
+.hero .hero-caption-description {
+  padding-bottom: 16px;
+}
+
+.hero .hero-caption-credit a:any-link {
+  color: rgb(0 102 164);
+  text-decoration: underline;
+}
+
 @media (width >= 900px) {
   .hero-media img {
     height: 600px;

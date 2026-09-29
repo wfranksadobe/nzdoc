@@ -34,6 +34,26 @@ var CustomImportScript = (() => {
     return to;
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+  var __async = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = (value) => {
+        try {
+          step(generator.next(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      var rejected = (value) => {
+        try {
+          step(generator.throw(value));
+        } catch (e) {
+          reject(e);
+        }
+      };
+      var step = (x) => x.done ? resolve(x.value) : Promise.resolve(x.value).then(fulfilled, rejected);
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
 
   // tools/importer/import-article-full.js
   var import_article_full_exports = {};
@@ -74,11 +94,33 @@ var CustomImportScript = (() => {
 
   // tools/importer/parsers/hero.js
   var SOURCE_ORIGIN2 = "https://www.doc.govt.nz";
+  var CAPTION_ATTR = "data-import-caption";
+  var CREDIT_ATTR = "data-import-credit";
   function hinted(document, field, ...content) {
     const frag = document.createDocumentFragment();
     frag.appendChild(document.createComment(` field:${field} `));
     content.forEach((c) => frag.appendChild(c));
     return frag;
+  }
+  function captionCell(document, element) {
+    if (!element.hasAttribute(CAPTION_ATTR) && !element.hasAttribute(CREDIT_ATTR)) return "";
+    const cell = document.createDocumentFragment();
+    const description = (element.getAttribute(CAPTION_ATTR) || "").trim();
+    if (description) {
+      const p = document.createElement("p");
+      p.textContent = description;
+      cell.append(hinted(document, "caption_description", p));
+    }
+    const credit = document.createElement("div");
+    credit.innerHTML = element.getAttribute(CREDIT_ATTR) || "";
+    [...credit.querySelectorAll("b, strong")].filter((b) => /^image:?$/i.test(b.textContent.trim())).forEach((b) => (b.closest("span") || b).remove());
+    credit.querySelectorAll("a[href]").forEach((a) => a.setAttribute("href", new URL(a.getAttribute("href"), SOURCE_ORIGIN2).href));
+    if (credit.textContent.trim()) {
+      const p = document.createElement("p");
+      p.innerHTML = credit.innerHTML.replace(/\s+/g, " ").trim();
+      cell.append(hinted(document, "caption_credit", p));
+    }
+    return cell.childNodes.length ? cell : "";
   }
   function parse2(element, { document }) {
     const img = element.querySelector("img.hero__image") || element.querySelector(".hero__image-container img") || element.querySelector("img");
@@ -116,6 +158,7 @@ var CustomImportScript = (() => {
     } else {
       cells.push([""]);
     }
+    cells.push([captionCell(document, element)]);
     const block = WebImporter.Blocks.createBlock(document, { name: "Hero", cells });
     element.replaceWith(block);
   }
@@ -252,6 +295,24 @@ var CustomImportScript = (() => {
     });
     const block = WebImporter.Blocks.createBlock(document, { name: "Accordion", cells });
     element.replaceWith(block);
+  }
+
+  // tools/importer/lib/hero-caption.js
+  function loadHeroCaption(document) {
+    return __async(this, null, function* () {
+      const hero = document.querySelector(".hero");
+      if (!hero || !/^https?:/.test(document.location.href)) return;
+      try {
+        const resp = yield fetch(document.location.href, { credentials: "same-origin" });
+        const source = new DOMParser().parseFromString(yield resp.text(), "text/html");
+        const caption = source.querySelector(".hero doc-image-caption");
+        if (!caption) return;
+        hero.setAttribute("data-import-caption", caption.getAttribute("caption") || "");
+        hero.setAttribute("data-import-credit", (caption.querySelector(".hide-content") || caption).innerHTML);
+      } catch (e) {
+        console.warn("Hero caption not read", e);
+      }
+    });
   }
 
   // tools/importer/transformers/doc-cleanup.js
@@ -738,6 +799,9 @@ var CustomImportScript = (() => {
     return pageBlocks;
   }
   var import_article_full_default = {
+    onLoad: (_0) => __async(void 0, [_0], function* ({ document }) {
+      return loadHeroCaption(document);
+    }),
     transform: (payload) => {
       const { document, url, params, html } = payload;
       const main = document.body;

@@ -440,6 +440,14 @@
       {
         "component": "text",
         "valueType": "string",
+        "name": "imageAlt",
+        "label": "Alt text",
+        "description": "Describes the image for people who can't see it",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
         "name": "title",
         "label": "Title",
         "value": ""
@@ -450,6 +458,22 @@
         "name": "text",
         "label": "Text",
         "description": "Bulleted list of links shown as buttons; make an item bold to highlight it",
+        "value": ""
+      },
+      {
+        "component": "text",
+        "valueType": "string",
+        "name": "caption_description",
+        "label": "Image caption",
+        "description": "Optional. Shown with the credit in the image info bubble (e.g. the asset's title)",
+        "value": ""
+      },
+      {
+        "component": "richtext",
+        "valueType": "string",
+        "name": "caption_credit",
+        "label": "Image credit",
+        "description": "Optional. Shown after \"Image:\" in the info bubble (e.g. the asset's rights: photographer | owner)",
         "value": ""
       }
     ]
