@@ -262,41 +262,77 @@ main > .section:first-of-type {
 /*
  * section content sits on a white panel the width of the content column, as
  * on the source. Blocks that draw their own panels on the page background
- * (hero, breadcrumb, cards, columns, feedback) are left out.
+ * (hero, breadcrumb, cards, titled panel columns, feedback) are left out.
  */
-main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper) {
+main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper) {
+  display: flow-root;
   box-sizing: border-box;
   width: calc(100% - 48px);
   padding: 16px 24px 32px;
   background-color: rgb(255 255 255);
+  color: rgb(56 66 70);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 /* consecutive panels in a section read as one */
-main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper)
-+ div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper) {
+main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)
++ div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper) {
   padding-top: 0;
+}
+
+main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper):has(
+  + div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)
+) {
+  padding-bottom: 0;
+}
+
+/* body copy on the panels (low specificity, so blocks' own styles win) */
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) p {
+  margin: 0 0 16px;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) a:any-link {
+  color: rgb(0 102 164);
+  text-decoration: underline;
+}
+
+/* a paragraph holding just a link (a default button) is a plain link on the source */
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) a.button:not(.primary, .secondary) {
+  display: inline;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font: inherit;
+  text-align: inherit;
+  text-decoration: underline;
+  background-color: transparent;
+  color: rgb(0 102 164);
+  white-space: normal;
 }
 
 main > .section > .default-content-wrapper > :first-child {
   margin-top: 0;
 }
 
-main > .section > .default-content-wrapper > :last-child {
+main > .section > .default-content-wrapper:last-child > :last-child {
   margin-bottom: 0;
 }
 
 @media (width >= 900px) {
-  main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-wrapper, .feedback-wrapper) {
+  main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper) {
     width: calc(100% - 64px);
   }
 }
 
-/* page subtitle: a section holding a single title, directly under the hero */
-main > .section.hero-container + .section:has(> .default-content-wrapper:only-child > :is(h1, h2, h3, h4, h5, h6):only-child) {
+/* page subtitle: the title that opens the section directly under the hero */
+main > .section.hero-container + .section:has(> .default-content-wrapper:first-child > :is(h1, h2, h3, h4, h5, h6):first-child) {
   margin-top: 0;
 }
 
-main > .section.hero-container + .section > .default-content-wrapper:only-child > :is(h1, h2, h3, h4, h5, h6):only-child {
+main > .section.hero-container + .section > .default-content-wrapper:first-child > :is(h1, h2, h3, h4, h5, h6):first-child {
   margin: 0 0 16px;
   color: rgb(71 102 94);
   font-family: 'Zilla Slab', 'Courier New', monospace;

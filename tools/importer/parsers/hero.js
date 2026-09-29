@@ -4,7 +4,8 @@
 /**
  * Parser for the DOC hero.
  * Source: .hero (image, h1 title box, optional row of link buttons; the
- * highlighted button uses the gold background class).
+ * highlighted button uses the gold background class). An overlaid programme
+ * logo (linked image) is not part of the model and is left out.
  * Target model (xwalk): image | title | text (bullet list, bold = highlighted).
  * Three content rows by explicit project decision (overrides the default
  * two-row hero convention).
@@ -19,9 +20,14 @@ function hinted(document, field, ...content) {
 }
 
 export default function parse(element, { document }) {
-  const img = element.querySelector('img.hero__image, .hero__image-container img, img');
+  // the hero photo, not a programme logo overlaid on it (e.g. Short Walks)
+  const img = element.querySelector('img.hero__image')
+    || element.querySelector('.hero__image-container img')
+    || element.querySelector('img');
   const heading = element.querySelector('h1');
-  const links = [...element.querySelectorAll('a')];
+  // link buttons only: a linked logo overlay is not a button
+  const links = [...element.querySelectorAll('a')]
+    .filter((a) => a.textContent.trim() && !a.querySelector('img'));
 
   const cells = [];
 

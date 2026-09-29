@@ -5,6 +5,7 @@
 import breadcrumbParser from './parsers/breadcrumb.js';
 import heroParser from './parsers/hero.js';
 import feedbackParser from './parsers/feedback.js';
+import columnsTextVideoParser from './parsers/columns-text-video.js';
 
 // TRANSFORMER IMPORTS
 import docCleanupTransformer from './transformers/doc-cleanup.js';
@@ -14,6 +15,7 @@ const parsers = {
   breadcrumb: breadcrumbParser,
   hero: heroParser,
   feedback: feedbackParser,
+  columns: columnsTextVideoParser,
 };
 
 // TRANSFORMER REGISTRY (doc-cleanup also creates the section breaks between kept blocks)
@@ -24,7 +26,7 @@ const transformers = [
 // PAGE TEMPLATE CONFIGURATION - embedded from page-templates.json
 const PAGE_TEMPLATE = {
   "name": "article-hero",
-  "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb, hero, subtitle and page feedback only",
+  "description": "DOC articles and landing pages (homepage Featured / Media releases, Short Walks) - staged migration: breadcrumb, hero, subtitle, overview text with video, and page feedback only",
   "urls": [
     "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
     "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
@@ -33,7 +35,8 @@ const PAGE_TEMPLATE = {
     "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
     "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
     "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
-    "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/"
+    "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/",
+    "https://www.doc.govt.nz/parks-and-recreation/things-to-do/walking-and-tramping/short-walks/"
   ],
   "blocks": [
     {
@@ -49,11 +52,23 @@ const PAGE_TEMPLATE = {
       ]
     },
     {
+      "name": "columns",
+      "instances": [
+        ".doc-standard-overview__container:has(.doc-standard-overview__right-column iframe)"
+      ],
+      "note": "overview text beside a video only (text-only overviews are not migrated yet)"
+    },
+    {
+      "name": "embed",
+      "instances": [],
+      "note": "created by the columns parser (sibling after Columns, shown in its second column)"
+    },
+    {
       "name": "feedback",
       "instances": [
         ".feedbackContainer"
       ],
-      "note": "only the Featured articles have page feedback on the source"
+      "note": "only on pages with page feedback on the source (not the media releases)"
     }
   ],
   "sections": [
@@ -71,15 +86,18 @@ const PAGE_TEMPLATE = {
     },
     {
       "id": "section-2",
-      "name": "Subtitle",
+      "name": "Subtitle and overview",
       "selector": [
         ".doc-standard-overview__intro"
       ],
-      "blocks": [],
+      "blocks": [
+        "columns",
+        "embed"
+      ],
       "defaultContent": [
         ".doc-standard-overview__intro-text .lead"
       ],
-      "note": "the intro lead becomes a single h2 title, directly under the hero"
+      "note": "the intro lead becomes a single h2 title directly under the hero, followed by the overview text + video columns where the source has them"
     },
     {
       "id": "section-3",

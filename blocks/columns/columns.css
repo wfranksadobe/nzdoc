@@ -19,15 +19,32 @@
   display: block;
 }
 
+.columns > div > div > :last-child {
+  margin-bottom: 0;
+}
+
+/* a video in a column: the width of the column, 315px high as on the source */
+.columns .embed {
+  max-width: none;
+  margin: 0;
+}
+
+.columns .embed.embed-is-loaded > div {
+  /* the embed sets a 16:9 box inline */
+  height: 315px !important;
+  padding-bottom: 0 !important;
+}
+
 @media (width >= 900px) {
   .columns > div {
-    align-items: center;
+    align-items: flex-start;
     flex-direction: unset;
-    gap: 24px;
+    gap: 48px;
   }
 
   .columns > div > div {
     flex: 1;
+    min-width: 0;
     order: unset;
   }
 }

@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "url": "https://www.doc.govt.nz/parks-and-recreation/things-to-do/walking-and-tramping/short-walks/",
+  "path": "parks-and-recreation/things-to-do/walking-and-tramping/short-walks",
+  "timestamp": "2026-09-29T03:02:53.982Z",
+  "title": "EMA: Short Walks: Walking and tramping",
+  "template": "article-hero",
+  "blocks": [
+    "breadcrumb",
+    "hero",
+    "columns",
+    "feedback"
+  ],
+  "subtitle": "Discover some of our best short walks. They’re easy to get to and great for families – there’s something for everyone.",
+  "heroImages": "https://www.doc.govt.nz/thumbs/hero/contentassets/a8cf8502518043808b916575ca1bb512/denniston-hero.jpg -> /content/dam/nzdoc/heros/denniston-hero.jpg"
+}

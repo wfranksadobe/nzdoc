@@ -31,15 +31,14 @@ function candidatePaths(href) {
 }
 
 /**
- * The page subtitle: a section holding a single title, directly after the
+ * The page subtitle: the title that opens the section directly after the
  * section with the hero.
  * @param {Element} hero the page's hero block
  * @returns {string} subtitle text, or ''
  */
 function subtitleOf(hero) {
-  const section = hero?.closest('main > div')?.nextElementSibling;
-  const [title, ...rest] = section ? [...section.children] : [];
-  return title && !rest.length && /^H[1-6]$/.test(title.tagName) ? title.textContent.trim() : '';
+  const title = hero?.closest('main > div')?.nextElementSibling?.firstElementChild;
+  return /^H[1-6]$/.test(title?.tagName) ? title.textContent.trim() : '';
 }
 
 /**

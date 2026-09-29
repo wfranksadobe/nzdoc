@@ -81,9 +81,9 @@ var CustomImportScript = (() => {
     return frag;
   }
   function parse2(element, { document }) {
-    const img = element.querySelector("img.hero__image, .hero__image-container img, img");
+    const img = element.querySelector("img.hero__image") || element.querySelector(".hero__image-container img") || element.querySelector("img");
     const heading = element.querySelector("h1");
-    const links = [...element.querySelectorAll("a")];
+    const links = [...element.querySelectorAll("a")].filter((a) => a.textContent.trim() && !a.querySelector("img"));
     const cells = [];
     if (img) {
       const picture = document.createElement("picture");
@@ -153,6 +153,59 @@ var CustomImportScript = (() => {
     element.replaceWith(block);
   }
 
+  // tools/importer/parsers/columns-text-video.js
+  var SOURCE_ORIGIN3 = "https://www.doc.govt.nz";
+  var YOUTUBE_PLAYER = "/embed/";
+  function hinted2(document, field, node) {
+    const frag = document.createDocumentFragment();
+    frag.appendChild(document.createComment(` field:${field} `));
+    frag.appendChild(node);
+    return frag;
+  }
+  function videoUrl(src) {
+    const url = new URL(src, SOURCE_ORIGIN3);
+    if (url.hostname.includes("youtube") && url.pathname.startsWith(YOUTUBE_PLAYER)) {
+      const id = url.pathname.slice(YOUTUBE_PLAYER.length).split("/")[0];
+      return `https://www.youtube.com/watch?v=${id}`;
+    }
+    return `${url.origin}${url.pathname}`;
+  }
+  function parse4(element, { document }) {
+    const textColumn = element.querySelector(".doc-standard-overview__column:not(.doc-standard-overview__right-column)");
+    const iframe = element.querySelector(".doc-standard-overview__right-column iframe");
+    const text3 = document.createElement("div");
+    if (textColumn) {
+      textColumn.querySelectorAll("p, ul, ol, h2, h3, h4, blockquote").forEach((node) => {
+        if (node.parentElement.closest("p, ul, ol, blockquote")) return;
+        if (!node.textContent.trim()) return;
+        const copy = node.cloneNode(true);
+        copy.querySelectorAll("a[href]").forEach((a2) => {
+          a2.setAttribute("href", new URL(a2.getAttribute("href"), SOURCE_ORIGIN3).href);
+        });
+        text3.append(copy);
+      });
+    }
+    const columns = WebImporter.Blocks.createBlock(document, {
+      name: "Columns",
+      cells: [[text3, ""]]
+    });
+    if (!iframe) {
+      element.replaceWith(columns);
+      return;
+    }
+    const uri = videoUrl(iframe.getAttribute("src"));
+    const p = document.createElement("p");
+    const a = document.createElement("a");
+    a.href = uri;
+    a.textContent = uri;
+    p.append(a);
+    const embed = WebImporter.Blocks.createBlock(document, {
+      name: "Embed",
+      cells: [[hinted2(document, "embed_uri", p)]]
+    });
+    element.replaceWith(columns, embed);
+  }
+
   // tools/importer/transformers/doc-cleanup.js
   var TITLE_PREFIX = "EMA: ";
   function blockName(table) {
@@ -197,14 +250,15 @@ var CustomImportScript = (() => {
   var parsers = {
     breadcrumb: parse,
     hero: parse2,
-    feedback: parse3
+    feedback: parse3,
+    columns: parse4
   };
   var transformers = [
     transform
   ];
   var PAGE_TEMPLATE = {
     "name": "article-hero",
-    "description": "DOC articles (homepage Featured / Media releases) - staged migration: breadcrumb, hero, subtitle and page feedback only",
+    "description": "DOC articles and landing pages (homepage Featured / Media releases, Short Walks) - staged migration: breadcrumb, hero, subtitle, overview text with video, and page feedback only",
     "urls": [
       "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
       "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
@@ -213,7 +267,8 @@ var CustomImportScript = (() => {
       "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
       "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
       "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
-      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/"
+      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/",
+      "https://www.doc.govt.nz/parks-and-recreation/things-to-do/walking-and-tramping/short-walks/"
     ],
     "blocks": [
       {
@@ -229,11 +284,23 @@ var CustomImportScript = (() => {
         ]
       },
       {
+        "name": "columns",
+        "instances": [
+          ".doc-standard-overview__container:has(.doc-standard-overview__right-column iframe)"
+        ],
+        "note": "overview text beside a video only (text-only overviews are not migrated yet)"
+      },
+      {
+        "name": "embed",
+        "instances": [],
+        "note": "created by the columns parser (sibling after Columns, shown in its second column)"
+      },
+      {
         "name": "feedback",
         "instances": [
           ".feedbackContainer"
         ],
-        "note": "only the Featured articles have page feedback on the source"
+        "note": "only on pages with page feedback on the source (not the media releases)"
       }
     ],
     "sections": [
@@ -251,15 +318,18 @@ var CustomImportScript = (() => {
       },
       {
         "id": "section-2",
-        "name": "Subtitle",
+        "name": "Subtitle and overview",
         "selector": [
           ".doc-standard-overview__intro"
         ],
-        "blocks": [],
+        "blocks": [
+          "columns",
+          "embed"
+        ],
         "defaultContent": [
           ".doc-standard-overview__intro-text .lead"
         ],
-        "note": "the intro lead becomes a single h2 title, directly under the hero"
+        "note": "the intro lead becomes a single h2 title directly under the hero, followed by the overview text + video columns where the source has them"
       },
       {
         "id": "section-3",
