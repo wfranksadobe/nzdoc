@@ -9,6 +9,10 @@ import columnsTextVideoParser from './parsers/columns-text-video.js';
 
 // TRANSFORMER IMPORTS
 import docCleanupTransformer from './transformers/doc-cleanup.js';
+import migratedLinksTransformer from './transformers/migrated-links.js';
+
+// all migrated pages (links to them point at the migrated page)
+import pageTemplates from './page-templates.json';
 
 // PARSER REGISTRY
 const parsers = {
@@ -21,7 +25,10 @@ const parsers = {
 // TRANSFORMER REGISTRY (doc-cleanup also creates the section breaks between kept blocks)
 const transformers = [
   docCleanupTransformer,
+  migratedLinksTransformer,
 ];
+
+const MIGRATED_URLS = pageTemplates.templates.flatMap((template) => template.urls);
 
 // PAGE TEMPLATE CONFIGURATION - embedded from page-templates.json
 const PAGE_TEMPLATE = {
@@ -166,7 +173,7 @@ function mapHeroImagesToDam(main) {
  * @param {Object} payload - { document, url, html, params }
  */
 function executeTransformers(hookName, element, payload) {
-  const enhancedPayload = { ...payload, template: PAGE_TEMPLATE };
+  const enhancedPayload = { ...payload, template: PAGE_TEMPLATE, migratedUrls: MIGRATED_URLS };
   transformers.forEach((transformerFn) => {
     try {
       transformerFn.call(null, hookName, element, enhancedPayload);

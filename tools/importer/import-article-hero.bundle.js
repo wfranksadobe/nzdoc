@@ -246,6 +246,197 @@ var CustomImportScript = (() => {
     }
   }
 
+  // tools/importer/transformers/migrated-links.js
+  var SOURCE_ORIGIN4 = "https://www.doc.govt.nz";
+  var SITE_ROOT = "/content/nzdoc";
+  var pathOf = (url) => url.pathname.replace(/\/$/, "") || "/";
+  function transform2(hookName, element, payload) {
+    if (hookName !== "afterTransform") return;
+    const migrated = new Set((payload.migratedUrls || []).map((url) => pathOf(new URL(url))));
+    if (!migrated.size) return;
+    element.querySelectorAll("a[href]").forEach((a) => {
+      let href;
+      try {
+        href = new URL(a.getAttribute("href"), SOURCE_ORIGIN4);
+      } catch (e) {
+        return;
+      }
+      if (href.origin !== SOURCE_ORIGIN4 || href.search || href.hash) return;
+      const path = pathOf(href);
+      if (path === "/" || !migrated.has(path)) return;
+      a.setAttribute("href", `${SITE_ROOT}${path}`);
+    });
+  }
+
+  // tools/importer/page-templates.json
+  var page_templates_default = {
+    templates: [
+      {
+        name: "homepage",
+        description: "DOC homepage - staged migration: hero, homepage panels (cards, columns + content lists) and page feedback",
+        urls: [
+          "https://www.doc.govt.nz/"
+        ],
+        blocks: [
+          {
+            name: "hero",
+            instances: [
+              ".hero"
+            ]
+          },
+          {
+            name: "cards",
+            instances: [
+              ".doc-homepage-layout__content_top"
+            ]
+          },
+          {
+            name: "columns",
+            instances: [
+              ".doc-homepage-layout__content_bottom"
+            ]
+          },
+          {
+            name: "content-list",
+            instances: [],
+            note: "created by the columns parser (siblings after Columns)"
+          },
+          {
+            name: "feedback",
+            instances: [
+              ".feedbackContainer"
+            ]
+          }
+        ],
+        sections: [
+          {
+            id: "section-1",
+            name: "Hero",
+            selector: [
+              ".hero"
+            ],
+            blocks: [
+              "hero"
+            ],
+            defaultContent: []
+          },
+          {
+            id: "section-2",
+            name: "Homepage panels",
+            selector: [
+              ".doc-homepage-layout"
+            ],
+            blocks: [
+              "cards",
+              "columns",
+              "content-list"
+            ],
+            defaultContent: []
+          },
+          {
+            id: "section-3",
+            name: "Feedback",
+            selector: [
+              ".feedbackContainer"
+            ],
+            blocks: [
+              "feedback"
+            ],
+            defaultContent: []
+          }
+        ]
+      },
+      {
+        name: "article-hero",
+        description: "DOC articles and landing pages (homepage Featured / Media releases, Short Walks) - staged migration: breadcrumb, hero, subtitle, overview text with video, and page feedback only",
+        urls: [
+          "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
+          "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
+          "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
+          "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/",
+          "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
+          "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
+          "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
+          "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/",
+          "https://www.doc.govt.nz/parks-and-recreation/things-to-do/walking-and-tramping/short-walks/"
+        ],
+        blocks: [
+          {
+            name: "breadcrumb",
+            instances: [
+              'nav[aria-label="Breadcrumb"]'
+            ]
+          },
+          {
+            name: "hero",
+            instances: [
+              ".hero"
+            ]
+          },
+          {
+            name: "columns",
+            instances: [
+              ".doc-standard-overview__container:has(.doc-standard-overview__right-column iframe)"
+            ],
+            note: "overview text beside a video only (text-only overviews are not migrated yet)"
+          },
+          {
+            name: "embed",
+            instances: [],
+            note: "created by the columns parser (sibling after Columns, shown in its second column)"
+          },
+          {
+            name: "feedback",
+            instances: [
+              ".feedbackContainer"
+            ],
+            note: "only on pages with page feedback on the source (not the media releases)"
+          }
+        ],
+        sections: [
+          {
+            id: "section-1",
+            name: "Breadcrumb and hero",
+            selector: [
+              ".hero"
+            ],
+            blocks: [
+              "breadcrumb",
+              "hero"
+            ],
+            defaultContent: []
+          },
+          {
+            id: "section-2",
+            name: "Subtitle and overview",
+            selector: [
+              ".doc-standard-overview__intro"
+            ],
+            blocks: [
+              "columns",
+              "embed"
+            ],
+            defaultContent: [
+              ".doc-standard-overview__intro-text .lead"
+            ],
+            note: "the intro lead becomes a single h2 title directly under the hero, followed by the overview text + video columns where the source has them"
+          },
+          {
+            id: "section-3",
+            name: "Feedback",
+            selector: [
+              ".feedbackContainer"
+            ],
+            blocks: [
+              "feedback"
+            ],
+            defaultContent: []
+          }
+        ]
+      }
+    ]
+  };
+
   // tools/importer/import-article-hero.js
   var parsers = {
     breadcrumb: parse,
@@ -254,8 +445,10 @@ var CustomImportScript = (() => {
     columns: parse4
   };
   var transformers = [
-    transform
+    transform,
+    transform2
   ];
+  var MIGRATED_URLS = page_templates_default.templates.flatMap((template) => template.urls);
   var PAGE_TEMPLATE = {
     "name": "article-hero",
     "description": "DOC articles and landing pages (homepage Featured / Media releases, Short Walks) - staged migration: breadcrumb, hero, subtitle, overview text with video, and page feedback only",
@@ -373,7 +566,7 @@ var CustomImportScript = (() => {
     return [...mapped].map(([source, dam]) => ({ source, dam }));
   }
   function executeTransformers(hookName, element, payload) {
-    const enhancedPayload = __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE });
+    const enhancedPayload = __spreadProps(__spreadValues({}, payload), { template: PAGE_TEMPLATE, migratedUrls: MIGRATED_URLS });
     transformers.forEach((transformerFn) => {
       try {
         transformerFn.call(null, hookName, element, enhancedPayload);
