@@ -1,65 +1,133 @@
+/*
+ * DOC accordion: white rows on a strip of the page background, 4px apart and
+ * 4px clear of what follows, running the full width of the content panel.
+ */
+main > .section > div.accordion-wrapper {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.accordion {
+  --accordion-link: rgb(0 102 164);
+  --accordion-icon: rgb(21 121 183);
+  --accordion-hover: rgb(230 231 232);
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 4px;
+  background-color: var(--page-background-color);
+  color: rgb(56 66 70);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+/* Expand all | Collapse all */
+.accordion .accordion-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 8px 8px;
+  background-color: #fff;
+}
+
+.accordion .accordion-controls button {
+  display: block;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+  color: var(--accordion-link);
+  font: inherit;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.accordion .accordion-controls button:hover,
+.accordion .accordion-controls button:focus {
+  background: none;
+}
+
+/* keeps the spacing between the two; drawn 0px high on the source, so not seen */
+.accordion .accordion-controls-divider {
+  width: 1px;
+  height: 0;
+}
+
+.accordion .accordion-controls [hidden] {
+  display: none;
+}
+
 .accordion details {
-  border: 1px solid #dadada;
-}
-
-/* stylelint-disable-next-line no-descending-specificity */
-.accordion details + details {
-  margin-top: 24px;
-}
-
-.accordion details p {
-  margin-bottom: 0.8em;
+  background-color: #fff;
 }
 
 .accordion details summary {
-  position: relative;
-  padding: 0 16px;
-  padding-right: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
   cursor: pointer;
   list-style: none;
-  overflow: auto;
-  transition: background-color 0.2s;
-}
-
-.accordion details[open] summary {
-  background-color: var(--light-color);
-}
-
-.accordion details summary:focus,
-.accordion details summary:hover {
-  background-color: var(--light-color);
 }
 
 .accordion details summary::-webkit-details-marker {
   display: none;
 }
 
-.accordion details summary::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: 18px;
-  transform: translateY(-50%) rotate(135deg);
-  width: 6px;
-  height: 6px;
-  border: 2px solid;
-  border-width: 2px 2px 0 0;
-  transition: transform 0.2s;
+.accordion details summary:hover {
+  background-color: var(--accordion-hover);
 }
 
-.accordion details[open] summary::after {
-  transform: translateY(-50%) rotate(-45deg);
+.accordion details summary:focus-visible {
+  outline: 2px solid var(--accordion-link);
+  outline-offset: -2px;
+}
+
+.accordion .accordion-item-title {
+  flex: 1;
+  margin: 0;
+  color: var(--accordion-link);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 22.4px;
+  font-weight: 700;
+  line-height: 33.6px;
+  text-align: left;
+}
+
+.accordion .accordion-item-icon {
+  display: flex;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: var(--accordion-icon);
+}
+
+.accordion .accordion-item-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.accordion details[open] .accordion-item-icon {
+  transform: rotate(180deg);
 }
 
 .accordion details .accordion-item-body {
-  padding: 0 16px;
+  margin-top: 2px;
+  padding: 12px 16px 24px;
 }
 
-.accordion details:not([open]) .accordion-item-body {
-  display: none;
+.accordion details .accordion-item-body > :first-child {
+  margin-top: 0;
 }
 
-.accordion details[open] .accordion-item-body {
-  border-top: 1px solid #dadada;
-  background-color: var(--background-color);
+/* headings in an item sit straight under what comes before */
+.accordion details .accordion-item-body :is(h3, h4, h5, h6) {
+  margin-top: 0;
 }
+
+/* the last element keeps its bottom margin inside the item, as on the source */

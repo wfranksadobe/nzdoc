@@ -5,7 +5,7 @@
 import breadcrumbParser from './parsers/breadcrumb.js';
 import heroParser from './parsers/hero.js';
 import feedbackParser from './parsers/feedback.js';
-import columnsTextVideoParser from './parsers/columns-text-video.js';
+import accordionParser from './parsers/accordion.js';
 
 // TRANSFORMER IMPORTS
 import docCleanupTransformer from './transformers/doc-cleanup.js';
@@ -19,7 +19,7 @@ const parsers = {
   breadcrumb: breadcrumbParser,
   hero: heroParser,
   feedback: feedbackParser,
-  columns: columnsTextVideoParser,
+  accordion: accordionParser,
 };
 
 // TRANSFORMER REGISTRY (doc-cleanup also creates the section breaks between kept blocks)
@@ -32,17 +32,10 @@ const MIGRATED_URLS = pageTemplates.templates.flatMap((template) => template.url
 
 // PAGE TEMPLATE CONFIGURATION - embedded from page-templates.json
 const PAGE_TEMPLATE = {
-  "name": "article-hero",
-  "description": "DOC articles and landing pages (homepage Featured / Media releases, Short Walks) - staged migration: breadcrumb, hero, subtitle, overview text with video, and page feedback only",
+  "name": "article-full",
+  "description": "DOC articles migrated in full: breadcrumb, hero, subtitle, body (text, accordion, text) and page feedback",
   "urls": [
-    "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
-    "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
-    "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
-    "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
-    "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
-    "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
-    "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/",
-    "https://www.doc.govt.nz/parks-and-recreation/things-to-do/walking-and-tramping/short-walks/"
+    "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/"
   ],
   "blocks": [
     {
@@ -58,23 +51,16 @@ const PAGE_TEMPLATE = {
       ]
     },
     {
-      "name": "columns",
+      "name": "accordion",
       "instances": [
-        ".doc-standard-overview__container:has(.doc-standard-overview__right-column iframe)"
-      ],
-      "note": "overview text beside a video only (text-only overviews are not migrated yet)"
-    },
-    {
-      "name": "embed",
-      "instances": [],
-      "note": "created by the columns parser (sibling after Columns, shown in its second column)"
+        ".pagedoc .accordionblock"
+      ]
     },
     {
       "name": "feedback",
       "instances": [
         ".feedbackContainer"
-      ],
-      "note": "only on pages with page feedback on the source (not the media releases)"
+      ]
     }
   ],
   "sections": [
@@ -92,21 +78,39 @@ const PAGE_TEMPLATE = {
     },
     {
       "id": "section-2",
-      "name": "Subtitle and overview",
+      "name": "Subtitle",
       "selector": [
         ".doc-standard-overview__intro"
       ],
-      "blocks": [
-        "columns",
-        "embed"
-      ],
+      "blocks": [],
       "defaultContent": [
         ".doc-standard-overview__intro-text .lead"
       ],
-      "note": "the intro lead becomes a single h2 title directly under the hero, followed by the overview text + video columns where the source has them"
+      "note": "the intro lead becomes a single h2 title, directly under the hero"
     },
     {
       "id": "section-3",
+      "name": "Body",
+      "selector": [
+        ".pagedoc"
+      ],
+      "blocks": [
+        "accordion"
+      ],
+      "defaultContent": [
+        ".pagedoc > h2",
+        ".pagedoc > h3",
+        ".pagedoc > h4",
+        ".pagedoc > p",
+        ".pagedoc > ul",
+        ".pagedoc > ol",
+        ".pagedoc > blockquote",
+        ".pagedoc .textblock > *"
+      ],
+      "note": "text, then the accordion, then text (in page order)"
+    },
+    {
+      "id": "section-4",
       "name": "Feedback",
       "selector": [
         ".feedbackContainer"
@@ -207,20 +211,21 @@ function findBlocksOnPage(document, template) {
 
 export default {
   transform: (payload) => {
-    const { document, url, params } = payload;
+    const { document, url, params, html } = payload;
     const main = document.body;
 
     // 1. beforeTransform (title prefix)
     executeTransformers('beforeTransform', main, payload);
 
-    // 2-3. find and parse blocks
+    // 2-3. find and parse blocks (html: the source page as fetched, which still
+    // has the link anchors the import document no longer carries)
     const pageBlocks = findBlocksOnPage(document, PAGE_TEMPLATE);
     pageBlocks.forEach((block) => {
       if (!block.element.parentNode) return;
       const parser = parsers[block.name];
       if (parser) {
         try {
-          parser(block.element, { document, url, params });
+          parser(block.element, { document, url, params, html });
         } catch (e) {
           console.error(`Failed to parse ${block.name} (${block.selector}):`, e);
         }

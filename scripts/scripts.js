@@ -83,6 +83,40 @@ function buildAutoBlocks() {
   }
 }
 
+/**
+ * Content tables: rows migrated content carries for the conversion to AEM
+ * (an empty first row, a header row of bold cells) become a table header.
+ * @param {Element} main The container element
+ */
+function decorateTables(main) {
+  main.querySelectorAll('table').forEach((table) => {
+    if (table.querySelector('th')) return;
+    const rows = () => [...table.querySelectorAll('tr')];
+    while (rows().length > 1 && !rows()[0].textContent.trim() && !rows()[0].querySelector('img')) {
+      rows()[0].remove();
+    }
+    const [first] = rows();
+    const cells = first ? [...first.children] : [];
+    const squash = (value) => value.replace(/\s+/g, '');
+    // a cell whose text is all bold
+    const bold = (cell) => {
+      const text = squash(cell.textContent);
+      return text && squash([...cell.querySelectorAll('strong, b')]
+        .map((el) => el.textContent).join('')) === text;
+    };
+    if (!cells.length || !cells.every((cell) => !cell.textContent.trim() || bold(cell))) return;
+    const head = document.createElement('thead');
+    cells.forEach((cell) => {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.textContent = cell.textContent.trim();
+      cell.replaceWith(th);
+    });
+    head.append(first);
+    table.prepend(head);
+  });
+}
+
 function a11yLinks(main) {
   const links = main.querySelectorAll('a');
   links.forEach((link) => {
@@ -101,6 +135,7 @@ function a11yLinks(main) {
  */
 // eslint-disable-next-line import/prefer-default-export
 export function decorateMain(main) {
+  decorateTables(main);
   // hopefully forward compatible button decoration
   decorateButtons(main);
   decorateIcons(main);

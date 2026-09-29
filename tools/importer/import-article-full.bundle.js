@@ -35,10 +35,10 @@ var CustomImportScript = (() => {
   };
   var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-  // tools/importer/import-article-hero.js
-  var import_article_hero_exports = {};
-  __export(import_article_hero_exports, {
-    default: () => import_article_hero_default
+  // tools/importer/import-article-full.js
+  var import_article_full_exports = {};
+  __export(import_article_full_exports, {
+    default: () => import_article_full_default
   });
 
   // tools/importer/parsers/breadcrumb.js
@@ -153,57 +153,105 @@ var CustomImportScript = (() => {
     element.replaceWith(block);
   }
 
-  // tools/importer/parsers/columns-text-video.js
-  var SOURCE_ORIGIN3 = "https://www.doc.govt.nz";
-  var YOUTUBE_PLAYER = "/embed/";
-  function hinted2(document, field, node) {
-    const frag = document.createDocumentFragment();
-    frag.appendChild(document.createComment(` field:${field} `));
-    frag.appendChild(node);
-    return frag;
+  // tools/importer/parsers/accordion.js
+  function toId(name) {
+    return name.toLowerCase().replace(/[^0-9a-z]/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
   }
-  function videoUrl(src) {
-    const url = new URL(src, SOURCE_ORIGIN3);
-    if (url.hostname.includes("youtube") && url.pathname.startsWith(YOUTUBE_PLAYER)) {
-      const id = url.pathname.slice(YOUTUBE_PLAYER.length).split("/")[0];
-      return `https://www.youtube.com/watch?v=${id}`;
+  function headingId(heading) {
+    return heading.textContent.trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc}\- ]/gu, "").replace(/ /g, "-").replace(/^[\d-]+/, "");
+  }
+  function text3(el) {
+    return el ? el.textContent.replace(/\s+/g, " ").trim() : "";
+  }
+  function anchorTargets(content, itemId) {
+    const targets = /* @__PURE__ */ new Map();
+    if (!content) return targets;
+    const headings = [...content.querySelectorAll("h1, h2, h3, h4, h5, h6")];
+    content.querySelectorAll("[id], a[name]").forEach((anchor) => {
+      const id = anchor.id || anchor.getAttribute("name");
+      const own = anchor.closest("h1, h2, h3, h4, h5, h6");
+      const before = headings.filter((h) => h.compareDocumentPosition(anchor) & 4).pop();
+      const heading = own || before;
+      targets.set(id, heading ? headingId(heading) : itemId);
+    });
+    return targets;
+  }
+  function keepHeaderRow(document, table) {
+    var _a;
+    const body = table.querySelector("tbody") || table;
+    const rows = [...table.querySelectorAll("tr")];
+    const header = rows.find((row) => row.querySelector("th"));
+    table.querySelectorAll("th").forEach((th) => {
+      const td = document.createElement("td");
+      const strong = document.createElement("strong");
+      strong.append(...th.childNodes);
+      td.append(strong);
+      th.replaceWith(td);
+    });
+    if (header) body.prepend(header);
+    (_a = table.querySelector("thead")) == null ? void 0 : _a.remove();
+    const columns = Math.max(...rows.map((row) => row.children.length));
+    const spacer = document.createElement("tr");
+    for (let i = 0; i < columns; i += 1) spacer.append(document.createElement("td"));
+    body.prepend(spacer);
+  }
+  function contentCell(document, content) {
+    const cell = document.createElement("div");
+    cell.append(document.createComment(" field:text "));
+    if (!content) return cell;
+    const body = content.cloneNode(true);
+    body.querySelectorAll("div").forEach((div) => div.replaceWith(...div.childNodes));
+    body.querySelectorAll("a:not([href])").forEach((a) => a.replaceWith(...a.childNodes));
+    body.querySelectorAll("p").forEach((p) => {
+      if (!p.textContent.trim() && !p.querySelector("img")) p.remove();
+    });
+    body.querySelectorAll("[style]").forEach((el) => el.removeAttribute("style"));
+    body.querySelectorAll("table").forEach((table) => {
+      ["class", "border", "width", "height", "cellpadding", "cellspacing"].forEach((attr) => table.removeAttribute(attr));
+      keepHeaderRow(document, table);
+    });
+    cell.append(...body.childNodes);
+    return cell;
+  }
+  function titleCell(document, title) {
+    const cell = document.createElement("div");
+    cell.append(document.createComment(" field:summary "), document.createTextNode(title));
+    return cell;
+  }
+  function samePageAnchor(a, pageUrl) {
+    const raw = (a.getAttribute("href") || "").trim();
+    if (raw.startsWith("#")) return raw.slice(1) || null;
+    try {
+      const url = new URL(raw, pageUrl);
+      const page = new URL(pageUrl);
+      const path = (u) => u.pathname.replace(/\/$/, "");
+      return url.hash && url.origin === page.origin && path(url) === path(page) ? url.hash.slice(1) : null;
+    } catch (e) {
+      return null;
     }
-    return `${url.origin}${url.pathname}`;
   }
-  function parse4(element, { document }) {
-    const textColumn = element.querySelector(".doc-standard-overview__column:not(.doc-standard-overview__right-column)");
-    const iframe = element.querySelector(".doc-standard-overview__right-column iframe");
-    const text3 = document.createElement("div");
-    if (textColumn) {
-      textColumn.querySelectorAll("p, ul, ol, h2, h3, h4, blockquote").forEach((node) => {
-        if (node.parentElement.closest("p, ul, ol, blockquote")) return;
-        if (!node.textContent.trim()) return;
-        const copy = node.cloneNode(true);
-        copy.querySelectorAll("a[href]").forEach((a2) => {
-          a2.setAttribute("href", new URL(a2.getAttribute("href"), SOURCE_ORIGIN3).href);
-        });
-        text3.append(copy);
+  function parse4(element, { document, url, params, html }) {
+    const pageUrl = (params == null ? void 0 : params.originalURL) || url;
+    const items = [...element.querySelectorAll(".accordion-item")];
+    const source = html ? new DOMParser().parseFromString(html, "text/html") : null;
+    const sourceItems = source ? [...source.querySelectorAll(".doc-accordion .accordion-item")] : [];
+    const cells = items.map((item, index) => {
+      var _a;
+      const title = text3(item.querySelector("button h2, h2"));
+      const content = item.querySelector(".accordion-content");
+      const id = toId(title);
+      const sourceContent = sourceItems.length === items.length ? sourceItems[index].querySelector(".accordion-content") : content;
+      const targets = anchorTargets(sourceContent, id);
+      const buttonId = (_a = item.querySelector("button")) == null ? void 0 : _a.id;
+      if (buttonId && !targets.has(buttonId)) targets.set(buttonId, id);
+      document.querySelectorAll("a[href]").forEach((a) => {
+        const target = targets.get(samePageAnchor(a, pageUrl));
+        if (target) a.setAttribute("href", `#${target}`);
       });
-    }
-    const columns = WebImporter.Blocks.createBlock(document, {
-      name: "Columns",
-      cells: [[text3, ""]]
+      return [titleCell(document, title), contentCell(document, content)];
     });
-    if (!iframe) {
-      element.replaceWith(columns);
-      return;
-    }
-    const uri = videoUrl(iframe.getAttribute("src"));
-    const p = document.createElement("p");
-    const a = document.createElement("a");
-    a.href = uri;
-    a.textContent = uri;
-    p.append(a);
-    const embed = WebImporter.Blocks.createBlock(document, {
-      name: "Embed",
-      cells: [[hinted2(document, "embed_uri", p)]]
-    });
-    element.replaceWith(columns, embed);
+    const block = WebImporter.Blocks.createBlock(document, { name: "Accordion", cells });
+    element.replaceWith(block);
   }
 
   // tools/importer/transformers/doc-cleanup.js
@@ -247,7 +295,7 @@ var CustomImportScript = (() => {
   }
 
   // tools/importer/transformers/migrated-links.js
-  var SOURCE_ORIGIN4 = "https://www.doc.govt.nz";
+  var SOURCE_ORIGIN3 = "https://www.doc.govt.nz";
   var SITE_ROOT = "/content/nzdoc";
   var pathOf = (url) => url.pathname.replace(/\/$/, "") || "/";
   function transform2(hookName, element, payload) {
@@ -258,11 +306,11 @@ var CustomImportScript = (() => {
       if (!raw || raw.startsWith("#") || raw === "/") return;
       let href;
       try {
-        href = new URL(raw, SOURCE_ORIGIN4);
+        href = new URL(raw, SOURCE_ORIGIN3);
       } catch (e) {
         return;
       }
-      if (href.origin !== SOURCE_ORIGIN4) return;
+      if (href.origin !== SOURCE_ORIGIN3) return;
       const path = pathOf(href);
       if (path !== "/" && migrated.has(path) && !href.search && !href.hash) {
         a.setAttribute("href", `${SITE_ROOT}${path}`);
@@ -531,12 +579,12 @@ var CustomImportScript = (() => {
     ]
   };
 
-  // tools/importer/import-article-hero.js
+  // tools/importer/import-article-full.js
   var parsers = {
     breadcrumb: parse,
     hero: parse2,
     feedback: parse3,
-    columns: parse4
+    accordion: parse4
   };
   var transformers = [
     transform,
@@ -544,17 +592,10 @@ var CustomImportScript = (() => {
   ];
   var MIGRATED_URLS = page_templates_default.templates.flatMap((template) => template.urls);
   var PAGE_TEMPLATE = {
-    "name": "article-hero",
-    "description": "DOC articles and landing pages (homepage Featured / Media releases, Short Walks) - staged migration: breadcrumb, hero, subtitle, overview text with video, and page feedback only",
+    "name": "article-full",
+    "description": "DOC articles migrated in full: breadcrumb, hero, subtitle, body (text, accordion, text) and page feedback",
     "urls": [
-      "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
-      "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
-      "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
-      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
-      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
-      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
-      "https://www.doc.govt.nz/news/media-releases/2026-media-releases/toxoplasmosis-confirmed-as-cause-of-death-of-pregnant-hectors-dolphin/",
-      "https://www.doc.govt.nz/parks-and-recreation/things-to-do/walking-and-tramping/short-walks/"
+      "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/"
     ],
     "blocks": [
       {
@@ -570,23 +611,16 @@ var CustomImportScript = (() => {
         ]
       },
       {
-        "name": "columns",
+        "name": "accordion",
         "instances": [
-          ".doc-standard-overview__container:has(.doc-standard-overview__right-column iframe)"
-        ],
-        "note": "overview text beside a video only (text-only overviews are not migrated yet)"
-      },
-      {
-        "name": "embed",
-        "instances": [],
-        "note": "created by the columns parser (sibling after Columns, shown in its second column)"
+          ".pagedoc .accordionblock"
+        ]
       },
       {
         "name": "feedback",
         "instances": [
           ".feedbackContainer"
-        ],
-        "note": "only on pages with page feedback on the source (not the media releases)"
+        ]
       }
     ],
     "sections": [
@@ -604,21 +638,39 @@ var CustomImportScript = (() => {
       },
       {
         "id": "section-2",
-        "name": "Subtitle and overview",
+        "name": "Subtitle",
         "selector": [
           ".doc-standard-overview__intro"
         ],
-        "blocks": [
-          "columns",
-          "embed"
-        ],
+        "blocks": [],
         "defaultContent": [
           ".doc-standard-overview__intro-text .lead"
         ],
-        "note": "the intro lead becomes a single h2 title directly under the hero, followed by the overview text + video columns where the source has them"
+        "note": "the intro lead becomes a single h2 title, directly under the hero"
       },
       {
         "id": "section-3",
+        "name": "Body",
+        "selector": [
+          ".pagedoc"
+        ],
+        "blocks": [
+          "accordion"
+        ],
+        "defaultContent": [
+          ".pagedoc > h2",
+          ".pagedoc > h3",
+          ".pagedoc > h4",
+          ".pagedoc > p",
+          ".pagedoc > ul",
+          ".pagedoc > ol",
+          ".pagedoc > blockquote",
+          ".pagedoc .textblock > *"
+        ],
+        "note": "text, then the accordion, then text (in page order)"
+      },
+      {
+        "id": "section-4",
         "name": "Feedback",
         "selector": [
           ".feedbackContainer"
@@ -684,9 +736,9 @@ var CustomImportScript = (() => {
     console.log(`Found ${pageBlocks.length} block instances on page`);
     return pageBlocks;
   }
-  var import_article_hero_default = {
+  var import_article_full_default = {
     transform: (payload) => {
-      const { document, url, params } = payload;
+      const { document, url, params, html } = payload;
       const main = document.body;
       executeTransformers("beforeTransform", main, payload);
       const pageBlocks = findBlocksOnPage(document, PAGE_TEMPLATE);
@@ -695,7 +747,7 @@ var CustomImportScript = (() => {
         const parser = parsers[block.name];
         if (parser) {
           try {
-            parser(block.element, { document, url, params });
+            parser(block.element, { document, url, params, html });
           } catch (e) {
             console.error(`Failed to parse ${block.name} (${block.selector}):`, e);
           }
@@ -724,5 +776,5 @@ var CustomImportScript = (() => {
       }];
     }
   };
-  return __toCommonJS(import_article_hero_exports);
+  return __toCommonJS(import_article_full_exports);
 })();

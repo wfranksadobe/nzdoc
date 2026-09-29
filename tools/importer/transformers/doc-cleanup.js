@@ -38,7 +38,9 @@ export default function transform(hookName, element, payload) {
     // the source classes)
     const defaultContent = (template?.sections || []).map((s) => (s.defaultContent || [])
       .flatMap((selector) => [...element.querySelectorAll(selector)])
-      .filter((node) => !node.closest('table')));
+      .filter((node) => !node.closest('table'))
+      // empty spacers (e.g. <p>&nbsp;</p>) carry no content
+      .filter((node) => node.textContent.trim() || node.querySelector('img, picture')));
     const sectionOf = (node) => {
       const byContent = defaultContent.findIndex((nodes) => nodes.includes(node));
       if (byContent !== -1) return byContent;

@@ -278,7 +278,7 @@ var CustomImportScript = (() => {
     if (hookName === "afterTransform") {
       const templateBlocks = ((template == null ? void 0 : template.blocks) || []).map((b) => b.name);
       const blocks = [...element.querySelectorAll("table")].filter((table) => !table.parentElement.closest("table")).filter((table) => !templateBlocks.length || templateBlocks.includes(blockName(table)));
-      const defaultContent = ((template == null ? void 0 : template.sections) || []).map((s) => (s.defaultContent || []).flatMap((selector) => [...element.querySelectorAll(selector)]).filter((node) => !node.closest("table")));
+      const defaultContent = ((template == null ? void 0 : template.sections) || []).map((s) => (s.defaultContent || []).flatMap((selector) => [...element.querySelectorAll(selector)]).filter((node) => !node.closest("table")).filter((node) => node.textContent.trim() || node.querySelector("img, picture")));
       const sectionOf = (node) => {
         const byContent = defaultContent.findIndex((nodes2) => nodes2.includes(node));
         if (byContent !== -1) return byContent;
@@ -307,18 +307,22 @@ var CustomImportScript = (() => {
   function transform2(hookName, element, payload) {
     if (hookName !== "afterTransform") return;
     const migrated = new Set((payload.migratedUrls || []).map((url) => pathOf(new URL(url))));
-    if (!migrated.size) return;
     element.querySelectorAll("a[href]").forEach((a) => {
+      const raw = a.getAttribute("href").trim();
+      if (!raw || raw.startsWith("#") || raw === "/") return;
       let href;
       try {
-        href = new URL(a.getAttribute("href"), SOURCE_ORIGIN4);
+        href = new URL(raw, SOURCE_ORIGIN4);
       } catch (e) {
         return;
       }
-      if (href.origin !== SOURCE_ORIGIN4 || href.search || href.hash) return;
+      if (href.origin !== SOURCE_ORIGIN4) return;
       const path = pathOf(href);
-      if (path === "/" || !migrated.has(path)) return;
-      a.setAttribute("href", `${SITE_ROOT2}${path}`);
+      if (path !== "/" && migrated.has(path) && !href.search && !href.hash) {
+        a.setAttribute("href", `${SITE_ROOT2}${path}`);
+      } else {
+        a.setAttribute("href", href.href);
+      }
     });
   }
 
@@ -407,7 +411,6 @@ var CustomImportScript = (() => {
           "https://www.doc.govt.nz/news/issues/bird-flu-updates/",
           "https://www.doc.govt.nz/parks-and-recreation/things-to-do/fishing/whitebaiting/",
           "https://www.doc.govt.nz/about-us/our-role/managing-conservation/conservation-amendment-bill/",
-          "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/",
           "https://www.doc.govt.nz/news/media-releases/2026-media-releases/funding-boost-for-bird-flu-surveillance/",
           "https://www.doc.govt.nz/news/media-releases/2026-media-releases/government-invests-in-cleaning-up-contaminated-crown-land/",
           "https://www.doc.govt.nz/news/media-releases/2026-media-releases/4wd-group-plants-native-trees-to-fix-damage/",
@@ -477,6 +480,97 @@ var CustomImportScript = (() => {
           },
           {
             id: "section-3",
+            name: "Feedback",
+            selector: [
+              ".feedbackContainer"
+            ],
+            blocks: [
+              "feedback"
+            ],
+            defaultContent: []
+          }
+        ]
+      },
+      {
+        name: "article-full",
+        description: "DOC articles migrated in full: breadcrumb, hero, subtitle, body (text, accordion, text) and page feedback",
+        urls: [
+          "https://www.doc.govt.nz/news/events/national-events/national-wild-goat-hunting-competition/"
+        ],
+        blocks: [
+          {
+            name: "breadcrumb",
+            instances: [
+              'nav[aria-label="Breadcrumb"]'
+            ]
+          },
+          {
+            name: "hero",
+            instances: [
+              ".hero"
+            ]
+          },
+          {
+            name: "accordion",
+            instances: [
+              ".pagedoc .accordionblock"
+            ]
+          },
+          {
+            name: "feedback",
+            instances: [
+              ".feedbackContainer"
+            ]
+          }
+        ],
+        sections: [
+          {
+            id: "section-1",
+            name: "Breadcrumb and hero",
+            selector: [
+              ".hero"
+            ],
+            blocks: [
+              "breadcrumb",
+              "hero"
+            ],
+            defaultContent: []
+          },
+          {
+            id: "section-2",
+            name: "Subtitle",
+            selector: [
+              ".doc-standard-overview__intro"
+            ],
+            blocks: [],
+            defaultContent: [
+              ".doc-standard-overview__intro-text .lead"
+            ],
+            note: "the intro lead becomes a single h2 title, directly under the hero"
+          },
+          {
+            id: "section-3",
+            name: "Body",
+            selector: [
+              ".pagedoc"
+            ],
+            blocks: [
+              "accordion"
+            ],
+            defaultContent: [
+              ".pagedoc > h2",
+              ".pagedoc > h3",
+              ".pagedoc > h4",
+              ".pagedoc > p",
+              ".pagedoc > ul",
+              ".pagedoc > ol",
+              ".pagedoc > blockquote",
+              ".pagedoc .textblock > *"
+            ],
+            note: "text, then the accordion, then text (in page order)"
+          },
+          {
+            id: "section-4",
             name: "Feedback",
             selector: [
               ".feedbackContainer"

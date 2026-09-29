@@ -253,6 +253,15 @@ main > .section:first-of-type {
   margin-top: 0;
 }
 
+/* content sections sit 32px apart, as on the source (the feedback keeps its own spacing) */
+main > .section:not(.feedback-container) {
+  margin-bottom: 32px;
+}
+
+main > .section + .section:not(.feedback-container) {
+  margin-top: 32px;
+}
+
 @media (width >= 900px) {
   main > .section > div {
     padding: 0 32px;
@@ -263,12 +272,19 @@ main > .section:first-of-type {
  * section content sits on a white panel the width of the content column, as
  * on the source. Blocks that draw their own panels on the page background
  * (hero, breadcrumb, cards, titled panel columns, feedback) are left out.
+ * Panels are padded 16px 20px; the section under the hero (subtitle and
+ * overview) 16px 24px 32px.
  */
+main > .section.hero-container + .section {
+  --panel-padding-x: 24px;
+  --panel-padding-bottom: 32px;
+}
+
 main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper) {
   display: flow-root;
   box-sizing: border-box;
   width: calc(100% - 48px);
-  padding: 16px 24px 32px;
+  padding: 16px var(--panel-padding-x, 20px) var(--panel-padding-bottom, 16px);
   background-color: rgb(255 255 255);
   color: rgb(56 66 70);
   font-family: 'Clear Sans', 'Sans Serif', sans-serif;
@@ -291,6 +307,72 @@ main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .c
 /* body copy on the panels (low specificity, so blocks' own styles win) */
 :where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) p {
   margin: 0 0 16px;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) h2 {
+  margin: 0 0 16px;
+  color: rgb(56 66 70);
+  font-family: 'Zilla Slab', 'Courier New', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 57px;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) h3 {
+  margin: 24px 0 16px;
+  color: rgb(56 66 70);
+  font-family: 'Clear Sans', 'Sans Serif', sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 42px;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) :is(ul, ol) {
+  margin: 0 0 16px;
+  padding: 0 20px;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) li {
+  margin: 0;
+}
+
+/* list item text the conversion to AEM wraps in a paragraph sits as plain item text */
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) li > p {
+  margin: 0;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) li > p + p {
+  margin-top: 16px;
+}
+
+/* a list item holding just a nested list shows no marker of its own */
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) li:has(> :is(ul, ol):only-child) {
+  list-style: none;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) strong {
+  font-weight: 700;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) table {
+  width: 100%;
+  margin: 0 0 14px;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 21px;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) :is(th, td) {
+  border: 1px solid rgb(56 66 70);
+  padding: 12px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+:where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) th {
+  padding: 16px 8px;
+  background-color: rgb(224 220 206);
+  font-weight: 700;
 }
 
 :where(main > .section > div:not(.hero-wrapper, .breadcrumb-wrapper, .cards-wrapper, .columns-panels-wrapper, .feedback-wrapper)) a:any-link {
