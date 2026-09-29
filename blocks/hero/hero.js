@@ -30,51 +30,63 @@ function buildLinks(list) {
 const INFO_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M11 17h2v-6h-2zm1-8q.425 0 .713-.288T13 8t-.288-.712T12 7t-.712.288T11 8t.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137T2.788 15.9T2 12t.788-3.9t2.137-3.175T8.1 2.788T12 2t3.9.788t3.175 2.137T21.213 8.1T22 12t-.788 3.9t-2.137 3.175t-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12t-2.325-5.675T12 4T6.325 6.325T4 12t2.325 5.675T12 20m0-8"/></svg>';
 const CLOSE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M6.4 19L5 17.6l5.6-5.6L5 6.4L6.4 5l5.6 5.6L17.6 5L19 6.4L13.4 12l5.6 5.6l-1.4 1.4l-5.6-5.6z"/></svg>';
 
-// DAM asset metadata (dc:title, dc:rights) is read from AEM: the publish tier
-// on the site, the author tier itself while editing
-const AEM_PUBLISH = 'https://publish-p154716-e1630108.adobeaemcloud.com';
-const DAM_ROOT = '/content/dam/';
 // every credit ends with the (static) DOC copyright link
 const COPYRIGHT = { label: 'DOC', href: 'https://www.doc.govt.nz/footer-links/copyright/' };
+// the image's XMP metadata sits at the start of the file
+const XMP_BYTES = 65536;
 
 let captionCount = 0;
 
 /**
- * The DAM path the Image info field points to, from its link or text.
- * @param {Element} row image info row
- * @returns {string} asset path (/content/dam/...), or ''
+ * The original image file behind a displayed image: the site's optimised
+ * versions (and AEM renditions while editing) drop the file's metadata.
+ * @param {HTMLImageElement} img displayed image
+ * @returns {string} original file URL, or ''
  */
-function assetPathOf(row) {
-  if (!row) return '';
-  const link = row.querySelector('a');
-  const values = [link?.getAttribute('href'), link?.textContent, row.textContent];
-  const found = values.map((value) => (value || '').trim())
-    .map((value) => {
-      try {
-        return decodeURI(new URL(value, window.location.href).pathname);
-      } catch (e) {
-        return value;
-      }
-    })
-    .find((value) => value.includes(DAM_ROOT));
-  return found ? found.slice(found.indexOf(DAM_ROOT)).replace(/\.html$/, '') : '';
+function originalImageUrl(img) {
+  // the fallback source (not the chosen webp one), as the original's format
+  const src = img?.getAttribute('src') || img?.currentSrc;
+  if (!src) return '';
+  const url = new URL(src, window.location.href);
+  url.search = '';
+  url.pathname = url.pathname.replace(/\/_?jcr_content\/renditions\/.*$/, '').replace(/\/jcr:content\/renditions\/.*$/, '');
+  return url.href;
 }
 
-const firstValue = (value) => String((Array.isArray(value) ? value[0] : value) || '').trim();
+/**
+ * A language-alternative (or plain) Dublin Core value from an XMP packet.
+ * @param {Document} xmp parsed XMP
+ * @param {string} name element name (title, rights)
+ * @returns {string} value
+ */
+function dcValue(xmp, name) {
+  const el = xmp.getElementsByTagNameNS('http://purl.org/dc/elements/1.1/', name)[0];
+  if (!el) return '';
+  const items = [...el.getElementsByTagNameNS('http://www.w3.org/1999/02/22-rdf-syntax-ns#', 'li')];
+  const item = items.find((li) => li.getAttribute('xml:lang') === 'x-default') || items[0];
+  return (item || el).textContent.trim();
+}
 
 /**
- * The asset's title and rights from its DAM metadata.
- * @param {string} path asset path
+ * The image's title and rights (dc:title, dc:rights), read from the XMP
+ * metadata embedded in the image file, which AEM Assets holds for the asset.
+ * @param {HTMLImageElement} img displayed image
  * @returns {Promise<{title: string, rights: string}|null>} metadata, or null
  */
-async function fetchImageInfo(path) {
-  const onAuthor = window.location.hostname.startsWith('author-');
-  const base = onAuthor ? '' : AEM_PUBLISH;
+async function fetchImageInfo(img) {
+  const url = originalImageUrl(img);
+  if (!url) return null;
   try {
-    const resp = await fetch(`${base}${encodeURI(path)}/jcr:content/metadata.json`, onAuthor ? { credentials: 'include' } : {});
+    const resp = await fetch(url, { headers: { Range: `bytes=0-${XMP_BYTES - 1}` } });
     if (!resp.ok) return null;
-    const metadata = await resp.json();
-    return { title: firstValue(metadata['dc:title']), rights: firstValue(metadata['dc:rights']) };
+    const bytes = new Uint8Array(await resp.arrayBuffer()).subarray(0, XMP_BYTES);
+    const text = new TextDecoder('utf-8').decode(bytes);
+    const start = text.indexOf('<x:xmpmeta');
+    const end = text.indexOf('</x:xmpmeta>', start);
+    if (start < 0 || end < 0) return null;
+    const xmp = new DOMParser().parseFromString(text.slice(start, end + 12), 'application/xml');
+    if (xmp.querySelector('parsererror')) return null;
+    return { title: dcValue(xmp, 'title'), rights: dcValue(xmp, 'rights') };
   } catch (e) {
     return null;
   }
@@ -82,8 +94,8 @@ async function fetchImageInfo(path) {
 
 /**
  * The image info button (top right) and the caption bubble it opens.
- * @param {{title: string, rights: string}} info the image's DAM title and rights
- * @param {Element} row image info row (for the editor binding)
+ * @param {{title: string, rights: string}} info the image's title and rights
+ * @param {Element} [row] authored row the caption belongs to (editor binding)
  * @returns {Element|null} caption, when there is one
  */
 function buildCaption(info, row) {
@@ -141,12 +153,12 @@ function buildCaption(info, row) {
 /**
  * Hero: full-width image with the title box and optional link buttons
  * overlaid at the bottom, and an optional image info bubble at the top right
- * showing the image's DAM title and rights.
- * Rows: image (+ alt) | title | text (bullet list) | image info (DAM asset).
+ * showing the image's title and rights (its DAM dc:title / dc:rights).
+ * Rows: image (+ alt) | title | text (bullet list).
  * @param {Element} block the hero block
  */
 export default function decorate(block) {
-  const [imageRow, titleRow, textRow, infoRow] = [...block.children];
+  const [imageRow, titleRow, textRow] = [...block.children];
 
   const media = document.createElement('div');
   media.className = 'hero-media';
@@ -183,11 +195,11 @@ export default function decorate(block) {
   content.append(inner);
   block.replaceChildren(media, content);
 
-  // the image info bubble, once the image's DAM metadata is in
-  const assetPath = assetPathOf(infoRow);
-  if (assetPath) {
-    fetchImageInfo(assetPath).then((info) => {
-      const caption = buildCaption(info, infoRow);
+  // the image info bubble, once the image's metadata is in
+  const img = media.querySelector('img');
+  if (img) {
+    fetchImageInfo(img).then((info) => {
+      const caption = buildCaption(info);
       if (caption) block.append(caption);
     });
   }

@@ -74,23 +74,11 @@ var CustomImportScript = (() => {
 
   // tools/importer/parsers/hero.js
   var SOURCE_ORIGIN2 = "https://www.doc.govt.nz";
-  var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
   function hinted(document, field, ...content) {
     const frag = document.createDocumentFragment();
     frag.appendChild(document.createComment(` field:${field} `));
     content.forEach((c) => frag.appendChild(c));
     return frag;
-  }
-  function imageInfoCell(document, img) {
-    if (!img) return "";
-    const file = new URL(img.getAttribute("src"), SOURCE_ORIGIN2).pathname.split("/").pop();
-    const path = `${HERO_DAM_FOLDER}/${file}`;
-    const p = document.createElement("p");
-    const a = document.createElement("a");
-    a.href = path;
-    a.textContent = path;
-    p.append(a);
-    return hinted(document, "imageInfo", p);
   }
   function parse2(element, { document }) {
     const img = element.querySelector("img.hero__image") || element.querySelector(".hero__image-container img") || element.querySelector("img");
@@ -128,7 +116,6 @@ var CustomImportScript = (() => {
     } else {
       cells.push([""]);
     }
-    cells.push([imageInfoCell(document, img)]);
     const block = WebImporter.Blocks.createBlock(document, { name: "Hero", cells });
     element.replaceWith(block);
   }
@@ -706,7 +693,7 @@ var CustomImportScript = (() => {
     lead.replaceWith(title);
     return title.textContent;
   }
-  var HERO_DAM_FOLDER2 = "/content/dam/nzdoc/heros";
+  var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
   function mapHeroImagesToDam(main) {
     const mapped = /* @__PURE__ */ new Map();
     main.querySelectorAll("table").forEach((table) => {
@@ -715,7 +702,7 @@ var CustomImportScript = (() => {
       table.querySelectorAll("img").forEach((img) => {
         const source = img.getAttribute("src");
         const file = new URL(source).pathname.split("/").pop();
-        mapped.set(source, `${HERO_DAM_FOLDER2}/${file}`);
+        mapped.set(source, `${HERO_DAM_FOLDER}/${file}`);
       });
     });
     main.querySelectorAll("img").forEach((img) => {

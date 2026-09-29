@@ -7,32 +7,17 @@
  * highlighted button uses the gold background class). An overlaid programme
  * logo (linked image) is not part of the model and is left out.
  * Target model (xwalk): image (+ alt) | title | text (bullet list, bold =
- * highlighted) | image info (the image's DAM asset, whose dc:title and
- * dc:rights the image info bubble shows). Content rows by explicit project
- * decision (overrides the default two-row hero convention).
+ * highlighted). Three content rows by explicit project decision (overrides
+ * the default two-row hero convention). The image info bubble reads the
+ * image's own dc:title / dc:rights (embedded in the image file).
  */
 const SOURCE_ORIGIN = 'https://www.doc.govt.nz';
-// all page hero images are stored in one DAM folder (as the import scripts map them)
-const HERO_DAM_FOLDER = '/content/dam/nzdoc/heros';
 
 function hinted(document, field, ...content) {
   const frag = document.createDocumentFragment();
   frag.appendChild(document.createComment(` field:${field} `));
   content.forEach((c) => frag.appendChild(c));
   return frag;
-}
-
-/** The image info row: a reference to the hero image's DAM asset, or ''. */
-function imageInfoCell(document, img) {
-  if (!img) return '';
-  const file = new URL(img.getAttribute('src'), SOURCE_ORIGIN).pathname.split('/').pop();
-  const path = `${HERO_DAM_FOLDER}/${file}`;
-  const p = document.createElement('p');
-  const a = document.createElement('a');
-  a.href = path;
-  a.textContent = path;
-  p.append(a);
-  return hinted(document, 'imageInfo', p);
 }
 
 export default function parse(element, { document }) {
@@ -83,8 +68,6 @@ export default function parse(element, { document }) {
   } else {
     cells.push(['']);
   }
-
-  cells.push([imageInfoCell(document, img)]);
 
   const block = WebImporter.Blocks.createBlock(document, { name: 'Hero', cells });
   element.replaceWith(block);

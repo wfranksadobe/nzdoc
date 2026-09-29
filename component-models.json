@@ -459,13 +459,6 @@
         "label": "Text",
         "description": "Bulleted list of links shown as buttons; make an item bold to highlight it",
         "value": ""
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "imageInfo",
-        "label": "Image info",
-        "description": "Optional. Choose the same image in the DAM: its Title (dc:title) and Rights (dc:rights) show in the image info bubble"
       }
     ]
   },

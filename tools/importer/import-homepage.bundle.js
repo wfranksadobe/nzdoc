@@ -43,23 +43,11 @@ var CustomImportScript = (() => {
 
   // tools/importer/parsers/hero.js
   var SOURCE_ORIGIN = "https://www.doc.govt.nz";
-  var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
   function hinted(document, field, ...content) {
     const frag = document.createDocumentFragment();
     frag.appendChild(document.createComment(` field:${field} `));
     content.forEach((c) => frag.appendChild(c));
     return frag;
-  }
-  function imageInfoCell(document, img) {
-    if (!img) return "";
-    const file = new URL(img.getAttribute("src"), SOURCE_ORIGIN).pathname.split("/").pop();
-    const path = `${HERO_DAM_FOLDER}/${file}`;
-    const p = document.createElement("p");
-    const a = document.createElement("a");
-    a.href = path;
-    a.textContent = path;
-    p.append(a);
-    return hinted(document, "imageInfo", p);
   }
   function parse(element, { document }) {
     const img = element.querySelector("img.hero__image") || element.querySelector(".hero__image-container img") || element.querySelector("img");
@@ -97,7 +85,6 @@ var CustomImportScript = (() => {
     } else {
       cells.push([""]);
     }
-    cells.push([imageInfoCell(document, img)]);
     const block = WebImporter.Blocks.createBlock(document, { name: "Hero", cells });
     element.replaceWith(block);
   }
@@ -685,7 +672,7 @@ var CustomImportScript = (() => {
       }
     ]
   };
-  var HERO_DAM_FOLDER2 = "/content/dam/nzdoc/heros";
+  var HERO_DAM_FOLDER = "/content/dam/nzdoc/heros";
   var BLOG_DAM_FOLDER = "/content/dam/nzdoc/blogs";
   var BLOG_UPLOAD_PATTERN = /\/wp-content\/uploads\/(\d{4})\//;
   function fileName(src) {
@@ -699,7 +686,7 @@ var CustomImportScript = (() => {
     const mapped = /* @__PURE__ */ new Map();
     const toHeros = (img) => {
       const src = img.getAttribute("src");
-      mapped.set(src, `${HERO_DAM_FOLDER2}/${fileName(src)}`);
+      mapped.set(src, `${HERO_DAM_FOLDER}/${fileName(src)}`);
     };
     main.querySelectorAll("table").forEach((table) => {
       const name = firstCellText(table);
