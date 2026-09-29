@@ -51,20 +51,11 @@
           "value": ""
         },
         {
-          "component": "text",
+          "component": "aem-content",
           "valueType": "string",
-          "name": "caption_description",
-          "label": "Image caption",
-          "description": "Optional. Shown with the credit in the image info bubble (e.g. the asset's title)",
-          "value": ""
-        },
-        {
-          "component": "richtext",
-          "valueType": "string",
-          "name": "caption_credit",
-          "label": "Image credit",
-          "description": "Optional. Shown after \"Image:\" in the info bubble (e.g. the asset's rights: photographer | owner)",
-          "value": ""
+          "name": "imageInfo",
+          "label": "Image info",
+          "description": "Optional. Choose the same image in the DAM: its Title (dc:title) and Rights (dc:rights) show in the image info bubble"
         }
       ]
     }

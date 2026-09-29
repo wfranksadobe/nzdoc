@@ -7,9 +7,6 @@ import heroParser from './parsers/hero.js';
 import feedbackParser from './parsers/feedback.js';
 import accordionParser from './parsers/accordion.js';
 
-// hero image caption, read from the page's own HTML at load
-import loadHeroCaption from './lib/hero-caption.js';
-
 // TRANSFORMER IMPORTS
 import docCleanupTransformer from './transformers/doc-cleanup.js';
 import migratedLinksTransformer from './transformers/migrated-links.js';
@@ -213,8 +210,6 @@ function findBlocksOnPage(document, template) {
 }
 
 export default {
-  onLoad: async ({ document }) => loadHeroCaption(document),
-
   transform: (payload) => {
     const { document, url, params, html } = payload;
     const main = document.body;

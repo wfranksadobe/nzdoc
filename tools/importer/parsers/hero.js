@@ -7,19 +7,13 @@
  * highlighted button uses the gold background class). An overlaid programme
  * logo (linked image) is not part of the model and is left out.
  * Target model (xwalk): image (+ alt) | title | text (bullet list, bold =
- * highlighted) | caption (description + credit, the image info bubble).
- * Content rows by explicit project decision (overrides the default two-row
- * hero convention).
- *
- * The image caption is only rendered when its bubble is opened, so it is read
- * from the source page's own HTML: <doc-image-caption caption="..."> holding
- * the credit ("Image: " label, then photographer | owner link). The import's
- * onLoad step (lib/hero-caption.js, on the live page) fetches that HTML and
- * keeps the caption on the hero (data-import-caption / data-import-credit).
+ * highlighted) | image info (the image's DAM asset, whose dc:title and
+ * dc:rights the image info bubble shows). Content rows by explicit project
+ * decision (overrides the default two-row hero convention).
  */
 const SOURCE_ORIGIN = 'https://www.doc.govt.nz';
-const CAPTION_ATTR = 'data-import-caption';
-const CREDIT_ATTR = 'data-import-credit';
+// all page hero images are stored in one DAM folder (as the import scripts map them)
+const HERO_DAM_FOLDER = '/content/dam/nzdoc/heros';
 
 function hinted(document, field, ...content) {
   const frag = document.createDocumentFragment();
@@ -28,28 +22,17 @@ function hinted(document, field, ...content) {
   return frag;
 }
 
-/** The caption row (description + credit) kept on the hero at load, or ''. */
-function captionCell(document, element) {
-  if (!element.hasAttribute(CAPTION_ATTR) && !element.hasAttribute(CREDIT_ATTR)) return '';
-  const cell = document.createDocumentFragment();
-  const description = (element.getAttribute(CAPTION_ATTR) || '').trim();
-  if (description) {
-    const p = document.createElement('p');
-    p.textContent = description;
-    cell.append(hinted(document, 'caption_description', p));
-  }
-  const credit = document.createElement('div');
-  credit.innerHTML = element.getAttribute(CREDIT_ATTR) || '';
-  // the "Image:" label is part of the bubble, not the credit
-  [...credit.querySelectorAll('b, strong')].filter((b) => /^image:?$/i.test(b.textContent.trim()))
-    .forEach((b) => (b.closest('span') || b).remove());
-  credit.querySelectorAll('a[href]').forEach((a) => a.setAttribute('href', new URL(a.getAttribute('href'), SOURCE_ORIGIN).href));
-  if (credit.textContent.trim()) {
-    const p = document.createElement('p');
-    p.innerHTML = credit.innerHTML.replace(/\s+/g, ' ').trim();
-    cell.append(hinted(document, 'caption_credit', p));
-  }
-  return cell.childNodes.length ? cell : '';
+/** The image info row: a reference to the hero image's DAM asset, or ''. */
+function imageInfoCell(document, img) {
+  if (!img) return '';
+  const file = new URL(img.getAttribute('src'), SOURCE_ORIGIN).pathname.split('/').pop();
+  const path = `${HERO_DAM_FOLDER}/${file}`;
+  const p = document.createElement('p');
+  const a = document.createElement('a');
+  a.href = path;
+  a.textContent = path;
+  p.append(a);
+  return hinted(document, 'imageInfo', p);
 }
 
 export default function parse(element, { document }) {
@@ -101,7 +84,7 @@ export default function parse(element, { document }) {
     cells.push(['']);
   }
 
-  cells.push([captionCell(document, element)]);
+  cells.push([imageInfoCell(document, img)]);
 
   const block = WebImporter.Blocks.createBlock(document, { name: 'Hero', cells });
   element.replaceWith(block);

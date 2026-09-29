@@ -7,9 +7,6 @@ import heroParser from './parsers/hero.js';
 import feedbackParser from './parsers/feedback.js';
 import columnsTextVideoParser from './parsers/columns-text-video.js';
 
-// hero image caption, read from the page's own HTML at load
-import loadHeroCaption from './lib/hero-caption.js';
-
 // TRANSFORMER IMPORTS
 import docCleanupTransformer from './transformers/doc-cleanup.js';
 import migratedLinksTransformer from './transformers/migrated-links.js';
@@ -209,24 +206,21 @@ function findBlocksOnPage(document, template) {
 }
 
 export default {
-  onLoad: async ({ document }) => loadHeroCaption(document),
-
   transform: (payload) => {
-    const { document, url, params, html } = payload;
+    const { document, url, params } = payload;
     const main = document.body;
 
     // 1. beforeTransform (title prefix)
     executeTransformers('beforeTransform', main, payload);
 
-    // 2-3. find and parse blocks (html: the source page as fetched, which still
-    // has content only rendered on interaction, e.g. the hero image caption)
+    // 2-3. find and parse blocks
     const pageBlocks = findBlocksOnPage(document, PAGE_TEMPLATE);
     pageBlocks.forEach((block) => {
       if (!block.element.parentNode) return;
       const parser = parsers[block.name];
       if (parser) {
         try {
-          parser(block.element, { document, url, params, html });
+          parser(block.element, { document, url, params });
         } catch (e) {
           console.error(`Failed to parse ${block.name} (${block.selector}):`, e);
         }
