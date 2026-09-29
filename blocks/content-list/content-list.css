@@ -43,6 +43,11 @@
   background-color: var(--content-list-hover);
 }
 
+/* editor only: items after the first four, which the page does not show */
+.content-list-item.content-list-item-hidden {
+  opacity: 0.4;
+}
+
 .content-list-image {
   padding-bottom: 8px;
   line-height: 0;

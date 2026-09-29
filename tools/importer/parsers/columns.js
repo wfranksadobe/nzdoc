@@ -4,8 +4,8 @@
 /**
  * Parser for the DOC homepage bottom panels (source: .doc-homepage-layout__content_bottom).
  * Produces a Columns block with one column per source widget (the widget
- * title), followed by one Content List block per widget with its content
- * references (items_item1..4) and More link.
+ * title), followed by one Content List block per widget: its More link (a
+ * property of the list), then one Content Item (link) per content reference.
  *
  * Nested blocks can't be carried through the import (the importer flattens
  * them and md2jcr garbles nested tables), so the Content Lists are written as
@@ -47,21 +47,22 @@ function linkParagraph(document, href, label) {
 }
 
 function contentList(document, widget) {
-  const items = document.createDocumentFragment();
-  [...widget.querySelectorAll('.widget__content .card h3 a')]
-    .slice(0, MAX_ITEMS)
-    .forEach((a, i) => {
-      const path = toContentPath(a.getAttribute('href'));
-      items.append(hinted(document, `items_item${i + 1}`, linkParagraph(document, path, path)));
-    });
+  // list property: the More link
   const more = widget.querySelector('.widget__footer a');
   const moreCell = more
     ? hinted(document, 'more', linkParagraph(document, new URL(more.getAttribute('href'), SOURCE_ORIGIN).href, 'More'))
     : '';
-  // rows: content items | more
+  // child items: one Content Item row per referenced page
+  const items = [...widget.querySelectorAll('.widget__content .card h3 a')]
+    .slice(0, MAX_ITEMS)
+    .map((a) => {
+      const path = toContentPath(a.getAttribute('href'));
+      return [hinted(document, 'link', linkParagraph(document, path, path))];
+    });
+  // rows: more | content item | content item | ...
   return WebImporter.Blocks.createBlock(document, {
     name: 'Content List',
-    cells: [[items.childNodes.length ? items : ''], [moreCell]],
+    cells: [[moreCell], ...items],
   });
 }
 

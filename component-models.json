@@ -303,33 +303,21 @@
       {
         "component": "aem-content",
         "valueType": "string",
-        "name": "items_item1",
-        "label": "Content Item 1"
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "items_item2",
-        "label": "Content Item 2"
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "items_item3",
-        "label": "Content Item 3"
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
-        "name": "items_item4",
-        "label": "Content Item 4"
-      },
-      {
-        "component": "aem-content",
-        "valueType": "string",
         "name": "more",
         "label": "More",
         "description": "Optional. Shows a More button when set"
+      }
+    ]
+  },
+  {
+    "id": "content-list-item",
+    "fields": [
+      {
+        "component": "aem-content",
+        "valueType": "string",
+        "name": "link",
+        "label": "Content Item",
+        "description": "The page to show: its hero image and title, then its subtitle. The first 4 items are shown"
       }
     ]
   },

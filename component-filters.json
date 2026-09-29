@@ -65,6 +65,12 @@
     ]
   },
   {
+    "id": "content-list",
+    "components": [
+      "content-list-item"
+    ]
+  },
+  {
     "id": "table",
     "components": [
       "table-row"

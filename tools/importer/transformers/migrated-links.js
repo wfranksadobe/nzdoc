@@ -7,7 +7,8 @@
  * migrated page instead: its AEM page path (/content/nzdoc/...), the same
  * form as the content references, which publishes as the site path. Links to
  * pages not migrated yet point at the source site (relative source links are
- * made absolute). In-page links (#...) and the homepage ("/") stay as they are.
+ * made absolute). In-page links (#...), the homepage ("/") and AEM paths
+ * (/content/...) stay as they are.
  * payload.migratedUrls: the source URLs of all migrated pages (every URL of
  * every template in page-templates.json, passed in by the import script).
  */
@@ -22,6 +23,8 @@ export default function transform(hookName, element, payload) {
   element.querySelectorAll('a[href]').forEach((a) => {
     const raw = a.getAttribute('href').trim();
     if (!raw || raw.startsWith('#') || raw === '/') return;
+    // AEM paths (page references, DAM assets) are already migrated
+    if (raw.startsWith('/content/')) return;
     let href;
     try {
       href = new URL(raw, SOURCE_ORIGIN);

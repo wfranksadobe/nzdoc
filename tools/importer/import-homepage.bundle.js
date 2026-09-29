@@ -199,16 +199,15 @@ var CustomImportScript = (() => {
     return p;
   }
   function contentList(document, widget) {
-    const items = document.createDocumentFragment();
-    [...widget.querySelectorAll(".widget__content .card h3 a")].slice(0, MAX_ITEMS).forEach((a, i) => {
-      const path = toContentPath(a.getAttribute("href"));
-      items.append(hinted3(document, `items_item${i + 1}`, linkParagraph(document, path, path)));
-    });
     const more = widget.querySelector(".widget__footer a");
     const moreCell = more ? hinted3(document, "more", linkParagraph(document, new URL(more.getAttribute("href"), SOURCE_ORIGIN3).href, "More")) : "";
+    const items = [...widget.querySelectorAll(".widget__content .card h3 a")].slice(0, MAX_ITEMS).map((a) => {
+      const path = toContentPath(a.getAttribute("href"));
+      return [hinted3(document, "link", linkParagraph(document, path, path))];
+    });
     return WebImporter.Blocks.createBlock(document, {
       name: "Content List",
-      cells: [[items.childNodes.length ? items : ""], [moreCell]]
+      cells: [[moreCell], ...items]
     });
   }
   function parse3(element, { document }) {
@@ -310,6 +309,7 @@ var CustomImportScript = (() => {
     element.querySelectorAll("a[href]").forEach((a) => {
       const raw = a.getAttribute("href").trim();
       if (!raw || raw.startsWith("#") || raw === "/") return;
+      if (raw.startsWith("/content/")) return;
       let href;
       try {
         href = new URL(raw, SOURCE_ORIGIN4);

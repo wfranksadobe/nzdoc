@@ -304,6 +304,7 @@ var CustomImportScript = (() => {
     element.querySelectorAll("a[href]").forEach((a) => {
       const raw = a.getAttribute("href").trim();
       if (!raw || raw.startsWith("#") || raw === "/") return;
+      if (raw.startsWith("/content/")) return;
       let href;
       try {
         href = new URL(raw, SOURCE_ORIGIN3);

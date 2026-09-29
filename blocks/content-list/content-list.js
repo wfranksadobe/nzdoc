@@ -98,7 +98,7 @@ function buildImage(src, alt) {
 /**
  * Builds one content item from a page reference: the page's hero image and
  * title, then its subtitle.
- * @param {Element} source authored item (link)
+ * @param {Element} source authored item (its row, holding the page link)
  * @returns {Element} item
  */
 function buildItem(source) {
@@ -109,9 +109,15 @@ function buildItem(source) {
   const heading = document.createElement('h3');
   const link = document.createElement('a');
   link.href = href;
-  link.textContent = source.textContent.trim() || href;
+  link.textContent = (source.querySelector('a') || source).textContent.trim() || href;
   heading.append(link);
   item.append(heading);
+  // a Content Item just added in the editor has no page yet
+  if (!href) {
+    link.removeAttribute('href');
+    link.textContent = 'Choose a page';
+    return item;
+  }
 
   fetchTeaser(href).then((teaser) => {
     if (!teaser) return;
@@ -127,27 +133,51 @@ function buildItem(source) {
   return item;
 }
 
+// shown items; further items stay authored (and visible, dimmed, while editing)
+const MAX_ITEMS = 4;
+
 /**
- * Content List: up to four referenced pages shown as teasers, then an
- * optional More button. Rows: content items | more.
+ * The authored rows: the list's More link, then one row per Content Item.
+ * Lists authored before Content Items existed hold all links in their first
+ * row and More in their second; those are read as before.
+ * @param {Element} block the content list block
+ * @returns {{moreRow: Element, itemRows: Element[]}} rows
+ */
+function authoredRows(block) {
+  const rows = [...block.children];
+  if (rows.length === 2 && rows[0].querySelectorAll('a').length > 1) {
+    return { moreRow: rows[1], itemRows: [...rows[0].querySelectorAll('a')] };
+  }
+  const [moreRow, ...itemRows] = rows;
+  // in the editor, items are components; the More row is a property of the list
+  if (moreRow?.dataset.aueType === 'component') return { moreRow: null, itemRows: rows };
+  return { moreRow, itemRows };
+}
+
+/**
+ * Content List: referenced pages shown as teasers (the first four), then an
+ * optional More button. Rows: more | one row per Content Item.
  * @param {Element} block the content list block
  */
 export default function decorate(block) {
-  const [itemsRow, moreRow] = [...block.children];
-  const itemsCell = itemsRow?.firstElementChild || itemsRow;
-  const sources = itemsCell
-    ? [...itemsCell.querySelectorAll('a')].filter((a) => hrefOf(a))
-    : [];
+  const { moreRow, itemRows } = authoredRows(block);
+  const editing = !!block.closest('[data-aue-resource]') || !!block.dataset.aueResource;
+  const sources = itemRows.filter((row) => hrefOf(row) || row.dataset.aueResource);
 
   const nodes = [];
   if (sources.length) {
     const list = document.createElement('ul');
     list.className = 'content-list-items';
-    sources.forEach((source) => list.append(buildItem(source)));
+    sources.forEach((source, i) => {
+      if (i >= MAX_ITEMS && !editing) return;
+      const item = buildItem(source);
+      if (i >= MAX_ITEMS) item.classList.add('content-list-item-hidden');
+      list.append(item);
+    });
     nodes.push(list);
   }
 
-  const moreHref = hrefOf(moreRow);
+  const moreHref = moreRow ? hrefOf(moreRow) : '';
   if (moreHref) {
     const footer = document.createElement('div');
     footer.className = 'content-list-footer';
@@ -155,7 +185,7 @@ export default function decorate(block) {
     more.className = 'content-list-more';
     more.href = moreHref;
     more.textContent = 'More';
-    moveInstrumentation(moreRow, more);
+    moveInstrumentation(moreRow.querySelector('[data-aue-prop]') || moreRow, more);
     footer.append(more);
     nodes.push(footer);
   }
